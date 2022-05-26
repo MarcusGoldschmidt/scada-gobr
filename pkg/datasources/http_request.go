@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
-	"github.com/google/uuid"
 	"io/ioutil"
 	"net/http"
 	"scadagobr/pkg/persistence"
@@ -30,92 +29,66 @@ func (r HttpRequestDataPoint) Name() string {
 	return r.name
 }
 
-type HttpRequestDataSource struct {
-	*DataSourceCommon
-	period     time.Duration
-	dataPoints []*HttpRequestDataPoint
+type HttpRequestWorker struct {
+	Period     time.Duration
+	DataPoints []*HttpRequestDataPoint
 
-	baseUrl      string
-	encoding     string
-	method       string
-	headers      map[string]string
-	bodyTemplate *string
+	BaseUrl      string
+	Encoding     string
+	Method       string
+	Headers      map[string]string
+	BodyTemplate *string
 
-	forEachDataPoint bool
+	ForEachDataPoint bool
+
+	Persistence persistence.DataPointPersistence
+	Client      *http.Client
+
+	dataSourceId shared.CommonId
 }
 
-type HttpRequestDataSourceRuntime struct {
-	id          shared.CommonId
-	dataSource  HttpRequestDataSource
-	persistence persistence.DataPointPersistence
-	client      *http.Client
+func NewHttpRequestWorker(dataSourceId shared.CommonId) *HttpRequestWorker {
+	return &HttpRequestWorker{dataSourceId: dataSourceId}
 }
 
-func (r *HttpRequestDataSource) AddDataPoint(dp *HttpRequestDataPoint) {
-	r.dataPoints = append(r.dataPoints, dp)
+func (c *HttpRequestWorker) DataSourceId() shared.CommonId {
+	return c.dataSourceId
 }
 
-func (r HttpRequestDataSource) Id() shared.CommonId {
-	return r.id
-}
-
-func (r HttpRequestDataSource) Name() string {
-	return r.name
-}
-
-func (r HttpRequestDataSource) IsEnable() bool {
-	return r.isEnable
-}
-
-func (r HttpRequestDataSource) GetDataPoints() []Datapoint {
-	datapoint := make([]Datapoint, len(r.dataPoints))
-	for i, v := range r.dataPoints {
-		datapoint[i] = Datapoint(v)
-	}
-	return datapoint
-}
-
-func (r HttpRequestDataSource) CreateRuntime(ctx context.Context, p persistence.DataPointPersistence) (DataSourceRuntime, error) {
-	rt := HttpRequestDataSourceRuntime{uuid.New(), r, p, &http.Client{}}
-	return rt, nil
-}
-
-func (c HttpRequestDataSourceRuntime) GetDataSource() DataSource {
-	return c.dataSource
-}
-
-func (c HttpRequestDataSourceRuntime) Run(ctx context.Context, shutdownCompleteChan chan shared.CommonId) error {
+func (c *HttpRequestWorker) Run(ctx context.Context, confirmShutdown chan bool, errorChan chan error) {
 	defer func() {
-		shutdownCompleteChan <- c.id
+		confirmShutdown <- true
 	}()
 
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
-		case <-time.After(c.dataSource.period):
+			return
+		case <-time.After(c.Period):
 			series, err := c.QueryDatabase(ctx)
 			if err != nil {
-				return err
+				errorChan <- err
+				return
 			}
-			err = c.persistence.AddDataPointValues(ctx, series)
+			err = c.Persistence.AddDataPointValues(ctx, series)
 			if err != nil {
-				return err
+				errorChan <- err
+				return
 			}
 		}
 	}
 }
 
-func (c *HttpRequestDataSourceRuntime) QueryDatabase(ctx context.Context) ([]*shared.IdSeries, error) {
+func (c *HttpRequestWorker) QueryDatabase(ctx context.Context) ([]*shared.IdSeries, error) {
 	dict := make(map[string]*HttpRequestDataPoint)
 
-	for _, point := range c.dataSource.dataPoints {
+	for _, point := range c.DataPoints {
 		dict[point.rowIdentifier] = point
 	}
 
 	bodyTemplate := ""
 
-	if c.dataSource.forEachDataPoint && c.dataSource.bodyTemplate != nil {
+	if c.ForEachDataPoint && c.BodyTemplate != nil {
 		resp, err := c.parseBodyTemplate()
 		if err != nil {
 			return nil, err
@@ -123,12 +96,12 @@ func (c *HttpRequestDataSourceRuntime) QueryDatabase(ctx context.Context) ([]*sh
 		bodyTemplate = *resp
 	}
 
-	req, err := http.NewRequest(c.dataSource.method, c.dataSource.baseUrl, bytes.NewBufferString(bodyTemplate))
+	req, err := http.NewRequest(c.Method, c.BaseUrl, bytes.NewBufferString(bodyTemplate))
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +114,7 @@ func (c *HttpRequestDataSourceRuntime) QueryDatabase(ctx context.Context) ([]*sh
 
 	var responseData []map[string]string
 
-	if c.dataSource.encoding == "XML" {
+	if c.Encoding == "XML" {
 		err := xml.Unmarshal(responseBody, &responseData)
 		if err != nil {
 			return nil, err
@@ -174,13 +147,13 @@ func (c *HttpRequestDataSourceRuntime) QueryDatabase(ctx context.Context) ([]*sh
 	return result, nil
 }
 
-func (c HttpRequestDataSourceRuntime) parseBodyTemplate() (*string, error) {
+func (c *HttpRequestWorker) parseBodyTemplate() (*string, error) {
 
-	if c.dataSource.bodyTemplate == nil {
+	if c.BodyTemplate == nil {
 		return nil, errors.New("do not found body template")
 	}
 
-	tmpl, err := template.New("test").Parse(*c.dataSource.bodyTemplate)
+	tmpl, err := template.New("test").Parse(*c.BodyTemplate)
 	if err != nil {
 		return nil, err
 	}

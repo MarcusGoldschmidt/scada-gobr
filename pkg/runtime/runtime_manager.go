@@ -2,31 +2,24 @@ package runtime
 
 import (
 	"context"
+	"errors"
 	"scadagobr/pkg/datasources"
 	"scadagobr/pkg/logger"
 	"scadagobr/pkg/persistence"
 	"scadagobr/pkg/providers"
 	"scadagobr/pkg/shared"
 	"sync"
-	"time"
 )
 
 type RuntimeManagerOptions struct {
 	MaxRuntimeRetry int
 }
 
-type dataSourcesRuntimeControl struct {
-	sync.Mutex
-	shutdown        func()
-	confirmShutdown chan shared.CommonId
-}
-
 type RuntimeManager struct {
-	Logger                    logger.Logger
-	mutex                     sync.RWMutex
-	dataSources               map[shared.CommonId]datasources.DataSource
-	dataSourcesRuntimeControl map[shared.CommonId]*dataSourcesRuntimeControl
-	options                   RuntimeManagerOptions
+	Logger      logger.Logger
+	mutex       sync.RWMutex
+	dataSources map[shared.CommonId]datasources.DataSourceRuntimeManager
+	options     RuntimeManagerOptions
 
 	persistence  persistence.DataPointPersistence
 	timeProvider providers.TimeProvider
@@ -34,13 +27,12 @@ type RuntimeManager struct {
 
 func NewRuntimeManager(logger logger.Logger, persistence persistence.DataPointPersistence) *RuntimeManager {
 	return &RuntimeManager{
-		Logger:                    logger,
-		mutex:                     sync.RWMutex{},
-		dataSources:               make(map[shared.CommonId]datasources.DataSource),
-		dataSourcesRuntimeControl: make(map[shared.CommonId]*dataSourcesRuntimeControl),
-		persistence:               persistence,
-		timeProvider:              providers.UtcTimeProvider{},
-		options:                   RuntimeManagerOptions{MaxRuntimeRetry: 5},
+		Logger:       logger,
+		mutex:        sync.RWMutex{},
+		dataSources:  make(map[shared.CommonId]datasources.DataSourceRuntimeManager),
+		persistence:  persistence,
+		timeProvider: providers.UtcTimeProvider{},
+		options:      RuntimeManagerOptions{MaxRuntimeRetry: 5},
 	}
 }
 
@@ -52,7 +44,7 @@ func (r *RuntimeManager) WithOptions(opt RuntimeManagerOptions) {
 	r.options = opt
 }
 
-func (r *RuntimeManager) AddDataSource(sources ...datasources.DataSource) {
+func (r *RuntimeManager) AddDataSource(sources ...datasources.DataSourceRuntimeManager) {
 	for _, source := range sources {
 		r.dataSources[source.Id()] = source
 	}
@@ -68,34 +60,11 @@ func (r *RuntimeManager) Run(ctx context.Context, id shared.CommonId) {
 
 	dataSource := r.dataSources[id]
 
-	if !dataSource.IsEnable() {
-		return
-	}
-
-	runtime, err := dataSource.CreateRuntime(ctx, r.persistence)
-
+	err := dataSource.Run(ctx)
 	if err != nil {
-		r.Logger.Errorf("Error to create data source runtime %s reason: %s", dataSource.Id(), err.Error())
+		r.Logger.Errorf("datasource runtime %s stopped with error: %s", dataSource.Name(), err.Error())
 		return
 	}
-
-	shutdown := make(chan shared.CommonId)
-	go func() {
-		for errCount := 0; errCount < r.options.MaxRuntimeRetry; errCount++ {
-			ctx, cancel := context.WithCancel(ctx)
-			r.createShutdownManager(dataSource.Id(), cancel, shutdown)
-
-			r.Logger.Infof("Starting datasource runtime %s", dataSource.Name())
-
-			err := runtime.Run(ctx, shutdown)
-			if err != nil {
-				r.Logger.Warningf("Restarting datapoint runtime %s with error %s", dataSource.Name(), err.Error())
-			}
-			r.StopDataSource(dataSource.Id())
-		}
-
-		r.Logger.Warningf("datasource runtime %s stopped with max restart option", dataSource.Name())
-	}()
 }
 
 func (r *RuntimeManager) RunAll(ctx context.Context) {
@@ -104,57 +73,57 @@ func (r *RuntimeManager) RunAll(ctx context.Context) {
 	}
 }
 
-func (r *RuntimeManager) createShutdownManager(id shared.CommonId, cancel func(), shutdown chan shared.CommonId) {
-	r.dataSourcesRuntimeControl[id] = &dataSourcesRuntimeControl{sync.Mutex{}, cancel, shutdown}
-}
-
-func (r *RuntimeManager) UpdateDataSource(ctx context.Context, ds datasources.DataSource) {
-	r.StopDataSource(ds.Id())
+func (r *RuntimeManager) UpdateDataSource(ctx context.Context, ds datasources.DataSourceRuntimeManager) {
+	_ = r.StopDataSource(ctx, ds.Id())
 	r.RemoveDataSource(ds.Id())
 	r.AddDataSource(ds)
 	r.Run(ctx, ds.Id())
 }
 
-func (r *RuntimeManager) RestartDataSource(ctx context.Context, id shared.CommonId) {
+func (r *RuntimeManager) RestartDataSource(ctx context.Context, id shared.CommonId) error {
 	r.Logger.Infof("Restarting datasource %s", id.String())
-	r.StopDataSource(id)
+	err := r.StopDataSource(ctx, id)
+	if err != nil {
+		return err
+	}
 	r.Run(ctx, id)
+	return nil
 }
 
-func (r *RuntimeManager) StopDataSource(id shared.CommonId) {
-	start := time.Now()
-
+func (r *RuntimeManager) StopDataSource(ctx context.Context, id shared.CommonId) error {
 	r.Logger.Infof("Shutdown datapoint runtime %s", id.String())
 
-	shutdown := r.dataSourcesRuntimeControl[id]
+	datasourceManager, ok := r.dataSources[id]
 
-	if shutdown == nil {
-		return
+	if !ok {
+		return errors.New("datasource not found")
 	}
 
-	shutdown.Lock()
-	defer shutdown.Unlock()
+	err := datasourceManager.Stop(ctx)
+	if err != nil {
+		return err
+	}
 
-	shutdown.shutdown()
-	<-shutdown.confirmShutdown
-
-	delete(r.dataSourcesRuntimeControl, id)
-
-	r.Logger.Infof("Shutdown completed of data source id: %s take %d Milliseconds", id.String(), time.Since(start).Milliseconds())
+	return nil
 }
 
-func (r *RuntimeManager) StopAll() {
+func (r *RuntimeManager) StopAll(ctx context.Context) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
 	wg := sync.WaitGroup{}
-	wg.Add(len(r.dataSourcesRuntimeControl))
+	wg.Add(len(r.dataSources))
 
-	for id := range r.dataSourcesRuntimeControl {
+	for id := range r.dataSources {
 		id := id
 		go func() {
-			r.StopDataSource(id)
-			wg.Done()
+			defer wg.Done()
+
+			err := r.StopDataSource(ctx, id)
+			if err != nil {
+				r.Logger.Warningf("error on stopping data source Id: %s, %s", id.String(), err)
+				return
+			}
 		}()
 	}
 

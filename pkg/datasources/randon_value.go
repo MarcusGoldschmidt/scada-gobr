@@ -2,7 +2,6 @@ package datasources
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"math/rand"
 	"scadagobr/pkg/persistence"
 	"scadagobr/pkg/providers"
@@ -12,12 +11,12 @@ import (
 
 type RandonValueDataPoint struct {
 	*DataPointCommon
-	initialValue int64
-	endValue     int64
+	InitialValue int64
+	EndValue     int64
 }
 
 func NewRandonValueDataPoint(dataPointCommon *DataPointCommon, initialValue int64, endValue int64) *RandonValueDataPoint {
-	return &RandonValueDataPoint{DataPointCommon: dataPointCommon, initialValue: initialValue, endValue: endValue}
+	return &RandonValueDataPoint{DataPointCommon: dataPointCommon, InitialValue: initialValue, EndValue: endValue}
 }
 
 func (r RandonValueDataPoint) Id() shared.CommonId {
@@ -28,75 +27,42 @@ func (r RandonValueDataPoint) Name() string {
 	return r.name
 }
 
-type RandonValueDataSource struct {
-	*DataSourceCommon
-	period     time.Duration
-	dataPoints []*RandonValueDataPoint
+type RandomValueWorker struct {
+	period       time.Duration
+	dataPoints   []*RandonValueDataPoint
+	persistence  persistence.DataPointPersistence
+	dataSourceId shared.CommonId
 }
 
-type RandonValueDataSourceRuntime struct {
-	id          shared.CommonId
-	dataSource  RandonValueDataSource
-	persistence persistence.DataPointPersistence
+func (c *RandomValueWorker) DataSourceId() shared.CommonId {
+	return c.dataSourceId
 }
 
-func NewRandonValueDataSource(dataSourceCommon *DataSourceCommon, period time.Duration) *RandonValueDataSource {
-	return &RandonValueDataSource{dataSourceCommon, period, []*RandonValueDataPoint{}}
+func NewRandomValueWorker(dataSourceId shared.CommonId, period time.Duration, dataPoints []*RandonValueDataPoint, persistence persistence.DataPointPersistence) *RandomValueWorker {
+	return &RandomValueWorker{dataSourceId: dataSourceId, period: period, dataPoints: dataPoints, persistence: persistence}
 }
 
-func (r *RandonValueDataSource) AddDataPoint(dp *RandonValueDataPoint) {
-	r.dataPoints = append(r.dataPoints, dp)
-}
-
-func (r RandonValueDataSource) Id() shared.CommonId {
-	return r.id
-}
-
-func (r RandonValueDataSource) Name() string {
-	return r.name
-}
-
-func (r RandonValueDataSource) IsEnable() bool {
-	return r.isEnable
-}
-
-func (r RandonValueDataSource) GetDataPoints() []Datapoint {
-	datapoint := make([]Datapoint, len(r.dataPoints))
-	for i, v := range r.dataPoints {
-		datapoint[i] = Datapoint(v)
-	}
-	return datapoint
-}
-
-func (r RandonValueDataSource) CreateRuntime(ctx context.Context, p persistence.DataPointPersistence) (DataSourceRuntime, error) {
-	rt := RandonValueDataSourceRuntime{uuid.New(), r, p}
-	return rt, nil
-}
-
-func (c RandonValueDataSourceRuntime) GetDataSource() DataSource {
-	return c.dataSource
-}
-
-func (c RandonValueDataSourceRuntime) Run(ctx context.Context, shutdownCompleteChan chan shared.CommonId) error {
+func (c *RandomValueWorker) Work(ctx context.Context, confirmShutdown chan bool, errorChan chan error) {
 	defer func() {
-		shutdownCompleteChan <- c.id
+		confirmShutdown <- true
 	}()
 
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
-		case <-time.After(c.dataSource.period):
-			for _, point := range c.dataSource.dataPoints {
-				value := point.initialValue + rand.Int63n(point.endValue-point.initialValue)
+			return
+		case <-time.After(c.period):
+			for _, point := range c.dataPoints {
+				value := point.InitialValue + rand.Int63n(point.EndValue-point.InitialValue)
 
 				currentTime := providers.DefaultTimeProvider.GetCurrentTime()
 
 				series := shared.NewSeries(float64(value), currentTime)
 
-				err := c.persistence.AddDataPointValue(ctx, point.Id(), series)
+				err := c.persistence.AddDataPointValue(ctx, c.dataSourceId, series)
 				if err != nil {
-					return err
+					errorChan <- err
+					return
 				}
 			}
 		}

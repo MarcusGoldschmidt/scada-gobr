@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
-	"github.com/google/uuid"
 	"io/ioutil"
 	"net/http"
 	"scadagobr/pkg/persistence"
@@ -29,55 +28,27 @@ func (r HttpServerDataPoint) Name() string {
 	return r.name
 }
 
-type HttpServerDataSource struct {
-	*DataSourceCommon
-	period     time.Duration
-	dataPoints []*HttpServerDataPoint
+type HttpServerWorker struct {
+	Period     time.Duration
+	DataPoints []*HttpServerDataPoint
 
-	router       *server.Router
-	endpoint     string
-	user         string
-	passwordHash string
+	Router       *server.Router
+	Endpoint     string
+	User         string
+	PasswordHash string
+
+	Persistence persistence.DataPointPersistence
+	AtmDone     int32
+
+	dataSourceId shared.CommonId
 }
 
-type HttpServerDataSourceRuntime struct {
-	id          shared.CommonId
-	dataSource  HttpServerDataSource
-	persistence persistence.DataPointPersistence
-	atmDone     int32
+func (c *HttpServerWorker) WithDataSourceId(dataSourceId shared.CommonId) {
+	c.dataSourceId = dataSourceId
 }
 
-func (r *HttpServerDataSource) AddDataPoint(dp *HttpServerDataPoint) {
-	r.dataPoints = append(r.dataPoints, dp)
-}
-
-func (r HttpServerDataSource) Id() shared.CommonId {
-	return r.id
-}
-
-func (r HttpServerDataSource) Name() string {
-	return r.name
-}
-
-func (r HttpServerDataSource) IsEnable() bool {
-	return r.isEnable
-}
-
-func (r HttpServerDataSource) GetDataPoints() []Datapoint {
-	datapoint := make([]Datapoint, len(r.dataPoints))
-	for i, v := range r.dataPoints {
-		datapoint[i] = Datapoint(v)
-	}
-	return datapoint
-}
-
-func (r HttpServerDataSource) CreateRuntime(ctx context.Context, p persistence.DataPointPersistence) (DataSourceRuntime, error) {
-	rt := HttpServerDataSourceRuntime{uuid.New(), r, p, 0}
-	return rt, nil
-}
-
-func (c HttpServerDataSourceRuntime) GetDataSource() DataSource {
-	return c.dataSource
+func (c *HttpServerWorker) DataSourceId() shared.CommonId {
+	return c.dataSourceId
 }
 
 type request struct {
@@ -86,9 +57,9 @@ type request struct {
 	Timestamp time.Time
 }
 
-func (c HttpServerDataSourceRuntime) Run(ctx context.Context, shutdownCompleteChan chan shared.CommonId) error {
+func (c *HttpServerWorker) Run(ctx context.Context, confirmShutdown chan bool, errorChan chan error) {
 	defer func() {
-		shutdownCompleteChan <- c.id
+		confirmShutdown <- true
 	}()
 
 	// TODO: verify best number
@@ -97,17 +68,17 @@ func (c HttpServerDataSourceRuntime) Run(ctx context.Context, shutdownCompleteCh
 	c.GerOrAddRoute(channel)
 	defer c.RemoveRoute()
 	defer close(channel)
-	defer atomic.AddInt32(&c.atmDone, 1)
+	defer atomic.AddInt32(&c.AtmDone, 1)
 
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			return
 		case data := <-channel:
 
 			dict := make(map[string]*shared.CommonId)
 
-			for _, point := range c.dataSource.dataPoints {
+			for _, point := range c.DataPoints {
 				dict[point.rowIdentifier] = &point.id
 			}
 
@@ -118,16 +89,17 @@ func (c HttpServerDataSourceRuntime) Run(ctx context.Context, shutdownCompleteCh
 				}
 			}
 
-			err := c.persistence.AddDataPointValues(ctx, series)
+			err := c.Persistence.AddDataPointValues(ctx, series)
 			if err != nil {
-				return err
+				errorChan <- err
+				return
 			}
 		}
 	}
 }
 
-func (c *HttpServerDataSourceRuntime) GerOrAddRoute(channel chan []*request) http.Handler {
-	if data, ok := c.dataSource.router.VerifyMatch(c.dataSource.endpoint); ok {
+func (c *HttpServerWorker) GerOrAddRoute(channel chan []*request) http.Handler {
+	if data, ok := c.Router.VerifyMatch(c.Endpoint); ok {
 		return data
 	}
 
@@ -139,12 +111,12 @@ func (c *HttpServerDataSourceRuntime) GerOrAddRoute(channel chan []*request) htt
 
 		hash := sha256.Sum256([]byte(split[1]))
 
-		if split[0] != c.dataSource.user && c.dataSource.passwordHash != string(hash[:]) {
+		if split[0] != c.User && c.PasswordHash != string(hash[:]) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
-		if c.atmDone == 1 {
+		if c.AtmDone == 1 {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("datasource runtime is done, try again later"))
 			return
@@ -169,18 +141,18 @@ func (c *HttpServerDataSourceRuntime) GerOrAddRoute(channel chan []*request) htt
 		}()
 	})
 
-	c.dataSource.router.AddMatch(c.dataSource.endpoint, handler)
+	c.Router.AddMatch(c.Endpoint, handler)
 
 	response := http.Handler(handler)
 
 	return response
 }
 
+func (c *HttpServerWorker) RemoveRoute() {
+	c.Router.RemoveMatch(c.Endpoint)
+}
+
 func setupError(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
 	_, _ = w.Write([]byte(err.Error()))
-}
-
-func (c *HttpServerDataSourceRuntime) RemoveRoute() {
-	c.dataSource.router.RemoveMatch(c.dataSource.endpoint)
 }

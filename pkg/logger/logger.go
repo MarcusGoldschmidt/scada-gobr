@@ -22,7 +22,6 @@ type Logger interface {
 	Warningf(string, ...interface{})
 	Infof(string, ...interface{})
 	Debugf(string, ...interface{})
-	CloneWithLevel(level LogLevel) Logger
 }
 
 func logLevelFromEnvironment() LogLevel {

@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"scadagobr/pkg/auth"
-	"scadagobr/pkg/datasources"
 	"scadagobr/pkg/logger"
 	"scadagobr/pkg/models"
 	"scadagobr/pkg/persistence"
@@ -83,7 +82,7 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 		return nil, err
 	}
 
-	datasource := datasources.LoadDataSources(db, scadaRouter)
+	datasource := LoadDataSourceRuntimeManager(db, scadaRouter)
 
 	runtimeManager.AddDataSource(datasource...)
 

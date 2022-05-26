@@ -2,7 +2,7 @@ package datasources
 
 import (
 	"context"
-	"github.com/google/uuid"
+	"scadagobr/pkg/logger"
 	"scadagobr/pkg/persistence"
 	"scadagobr/pkg/shared"
 	"testing"
@@ -11,37 +11,37 @@ import (
 
 func TestSimpleRuntime(t *testing.T) {
 	ctx := context.Background()
-	duration, _ := time.ParseDuration("2s")
-	ctx, _ = context.WithTimeout(ctx, duration)
 
-	common := NewDataSourceCommon(uuid.New(), "a", true)
+	testLogger := logger.NewTestLogger(t)
 
-	duration, _ = time.ParseDuration("1s")
+	common := NewDataSourceRuntimeManagerCommon(shared.NewCommonId(), "teste", testLogger)
 
-	dataSource := NewRandonValueDataSource(common, duration)
+	pointCommon := NewDataPointCommon(shared.NewCommonId(), "randon", true)
+	dataPoint := NewRandonValueDataPoint(pointCommon, 0, 100)
 
-	dataPointCommon := NewDataPointCommon(uuid.New(), "a", true)
+	memoryPersistence := persistence.NewInMemoryPersistence()
 
-	dataPoint := NewRandonValueDataPoint(dataPointCommon, 0, 100)
+	worker := NewRandomValueWorker(shared.NewCommonId(), 1*time.Second, []*RandonValueDataPoint{dataPoint}, memoryPersistence)
 
-	dataSource.AddDataPoint(dataPoint)
-
-	memoryP := persistence.NewInMemoryPersistence()
-
-	runtime, err := dataSource.CreateRuntime(ctx, memoryP)
+	common.WithWorker(worker)
+	err := common.Run(ctx)
 	if err != nil {
 		t.Error(err)
-		return
+	}
+	<-time.After(5 * time.Second)
+	err = common.Stop(ctx)
+	if err != nil {
+		t.Error(err)
 	}
 
-	shutdown := make(chan shared.CommonId)
+	<-time.After(2 * time.Second)
 
-	go func() {
-		err := runtime.Run(ctx, shutdown)
-		if err != nil {
-			t.Error(err)
-		}
-	}()
+	values, err := memoryPersistence.GetPointValues(worker.dataSourceId)
+	if err != nil {
+		t.Error(err)
+	}
 
-	<-shutdown
+	if len(values) != 4 {
+		t.Errorf("got %d", len(values))
+	}
 }

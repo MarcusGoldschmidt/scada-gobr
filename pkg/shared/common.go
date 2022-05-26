@@ -7,6 +7,10 @@ import (
 
 type CommonId = uuid.UUID
 
+func NewCommonId() CommonId {
+	return uuid.New()
+}
+
 type Series struct {
 	Value     float64
 	Timestamp time.Time

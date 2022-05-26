@@ -2,11 +2,20 @@ package persistence
 
 import (
 	"context"
+	"errors"
 	"scadagobr/pkg/shared"
 )
 
 type InMemoryPersistence struct {
 	data map[shared.CommonId][]*shared.Series
+}
+
+func (f InMemoryPersistence) GetPointValues(id shared.CommonId) ([]*shared.Series, error) {
+	if data, ok := f.data[id]; ok {
+		return data, nil
+	}
+
+	return nil, errors.New("data source not found")
 }
 
 func (f InMemoryPersistence) AddDataPointValues(ctx context.Context, values []*shared.IdSeries) error {

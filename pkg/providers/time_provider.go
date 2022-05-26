@@ -39,3 +39,11 @@ type UtcTimeProvider struct {
 func (p UtcTimeProvider) GetCurrentTime() time.Time {
 	return time.Now().In(time.UTC)
 }
+
+func TimeProviderFromTimeZone(zone string) TimeProvider {
+	if zone == "" {
+		return TimeProvider(&UtcTimeProvider{})
+	}
+
+	return LocationTimeProvider(zone)
+}

@@ -11,6 +11,7 @@ import (
 )
 
 var ErrUnauthorized error = errors.New("Unauthorized")
+var ContexClaimsKey string = "CLAIMS"
 
 type Claims struct {
 	Id       uuid.UUID
@@ -20,13 +21,13 @@ type Claims struct {
 }
 
 type JwtHandler struct {
-	expiration        time.Duration
-	refreshExpiration time.Duration
-	refreshKey        []byte
-	key               []byte
+	Expiration        time.Duration
+	RefreshExpiration time.Duration
+	RefreshKey        []byte
+	Key               []byte
 
-	timeProvider    providers.TimeProvider
-	userPersistence persistence.UserPersistence
+	TimeProvider    providers.TimeProvider
+	UserPersistence persistence.UserPersistence
 }
 
 func (handler *JwtHandler) ValidateJwt(token string) (*Claims, error) {
@@ -34,7 +35,7 @@ func (handler *JwtHandler) ValidateJwt(token string) (*Claims, error) {
 	claims := &Claims{}
 
 	tokenParse, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-		return handler.key, nil
+		return handler.Key, nil
 	})
 	if err != nil {
 		return nil, err
@@ -52,7 +53,7 @@ func (handler *JwtHandler) RefreshToken(refreshToken string) (*string, *string, 
 	claims := &Claims{}
 
 	token, err := jwt.ParseWithClaims(refreshToken, claims, func(token *jwt.Token) (interface{}, error) {
-		return handler.refreshKey, nil
+		return handler.RefreshKey, nil
 	})
 	if err != nil {
 		return nil, nil, err
@@ -62,7 +63,7 @@ func (handler *JwtHandler) RefreshToken(refreshToken string) (*string, *string, 
 		return nil, nil, ErrUnauthorized
 	}
 
-	user, err := handler.userPersistence.GetUser(claims.Id)
+	user, err := handler.UserPersistence.GetUser(claims.Id)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -72,7 +73,7 @@ func (handler *JwtHandler) RefreshToken(refreshToken string) (*string, *string, 
 
 // CreateJwt create normal token que refresh token
 func (handler *JwtHandler) CreateJwt(user *models.User) (*string, *string, error) {
-	expiration := handler.timeProvider.GetCurrentTime().Add(handler.expiration)
+	expiration := handler.TimeProvider.GetCurrentTime().Add(handler.Expiration)
 
 	claims := &Claims{
 		Id:       user.ID,
@@ -86,13 +87,13 @@ func (handler *JwtHandler) CreateJwt(user *models.User) (*string, *string, error
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString(handler.key)
+	tokenString, err := token.SignedString(handler.Key)
 
 	if err != nil {
 		return nil, nil, err
 	}
 
-	expiration = handler.timeProvider.GetCurrentTime().Add(handler.refreshExpiration)
+	expiration = handler.TimeProvider.GetCurrentTime().Add(handler.RefreshExpiration)
 	refreshClaims := jwt.StandardClaims{
 		ExpiresAt: expiration.Unix(),
 		Id:        uuid.NewString(),
@@ -100,7 +101,7 @@ func (handler *JwtHandler) CreateJwt(user *models.User) (*string, *string, error
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
 
-	refreshTokenString, err := refreshToken.SignedString(handler.refreshKey)
+	refreshTokenString, err := refreshToken.SignedString(handler.RefreshKey)
 
 	return &tokenString, &refreshTokenString, nil
 }

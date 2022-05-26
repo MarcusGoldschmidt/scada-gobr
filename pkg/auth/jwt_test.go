@@ -25,12 +25,12 @@ func TestSimpleJwtTest(t *testing.T) {
 	}
 
 	handler := JwtHandler{
-		userPersistence:   fakeUserPersistence{user},
-		timeProvider:      providers.UtcTimeProvider{},
-		refreshExpiration: 20 * time.Second,
-		expiration:        2100 * time.Second,
-		key:               []byte("test"),
-		refreshKey:        []byte("tset"),
+		UserPersistence:   fakeUserPersistence{user},
+		TimeProvider:      providers.UtcTimeProvider{},
+		RefreshExpiration: 20 * time.Second,
+		Expiration:        2100 * time.Second,
+		Key:               []byte("test"),
+		RefreshKey:        []byte("tset"),
 	}
 
 	jwt, refresh, err := handler.CreateJwt(user)

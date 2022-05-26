@@ -3,6 +3,10 @@ package pkg
 import (
 	"crypto/tls"
 	"github.com/spf13/viper"
+	"scadagobr/pkg/auth"
+	"scadagobr/pkg/persistence"
+	"scadagobr/pkg/providers"
+	"time"
 )
 
 type ScadagobrOptions struct {
@@ -13,9 +17,17 @@ type ScadagobrOptions struct {
 	MaxRecvMsgSize           int
 	MetricsServer            bool
 	AdminPassword            string
+	AdminEmail               string
 	DevMode                  bool
 	TLSConfig                *tls.Config
 	PostgresConnectionString string
+	timezone                 string
+
+	// Jwt
+	expiration        time.Duration
+	refreshExpiration time.Duration
+	refreshKey        []byte
+	key               []byte
 }
 
 func DefaultOptions() *ScadagobrOptions {
@@ -69,4 +81,17 @@ func ParseOptions() (*ScadagobrOptions, error) {
 	options.PostgresConnectionString = postgresConnectionString
 
 	return options, nil
+}
+
+func SetupJwtHandler(opt *ScadagobrOptions, persistence persistence.UserPersistence) *auth.JwtHandler {
+	handler := &auth.JwtHandler{
+		Key:               opt.key,
+		Expiration:        opt.expiration,
+		RefreshExpiration: opt.refreshExpiration,
+		RefreshKey:        opt.refreshKey,
+		TimeProvider:      providers.TimeProviderFromTimeZone(opt.timezone),
+		UserPersistence:   persistence,
+	}
+
+	return handler
 }

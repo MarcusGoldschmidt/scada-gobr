@@ -8,7 +8,7 @@ import (
 
 type DataSource struct {
 	gorm.Model
-	ID        uuid.UUID
+	ID        uuid.UUID `gorm:"type:uuid"`
 	Name      string
 	Data      []byte
 	CreatedAt time.Time

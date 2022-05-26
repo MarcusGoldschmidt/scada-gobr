@@ -8,6 +8,8 @@ install-dev:
 	cd scadagobr-client; \
     	npm i
 
+generate:
+	go generate pkg/server/api.go
 
 build-api: build-web generate
 	CGO_ENABLED=0 $(GO) build -v ./cmd/api/api.go
@@ -19,5 +21,3 @@ build-web:
 clean:
 	rm pkg/server/public -r
 
-generate:
-	go generate pkg/server/api.go

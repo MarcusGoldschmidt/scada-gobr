@@ -8,7 +8,8 @@ import (
 
 type User struct {
 	gorm.Model
-	ID            uuid.UUID
+	ID            uuid.UUID `gorm:"type:uuid"`
+	PasswordHash  string
 	Name          string
 	Email         *string
 	HomeUrl       string

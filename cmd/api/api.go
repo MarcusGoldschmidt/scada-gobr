@@ -24,6 +24,12 @@ func main() {
 		log.Panic(err)
 	}
 
+	err = scada.Setup()
+
+	if err != nil {
+		log.Panic(err)
+	}
+
 	ctx := context.Background()
 
 	err = scada.Run(ctx)

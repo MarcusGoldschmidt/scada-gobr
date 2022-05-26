@@ -5,19 +5,43 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "start": "sirv public --no-clear"
+    "start": "sirv public --no-clear",
+    "storybook": "start-storybook -p 6006",
+    "build-storybook": "build-storybook",
+    "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "devDependencies": {
+    "@babel/core": "^7.18.2",
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.0.0",
+    "@rollup/plugin-typescript": "^8.0.0",
+    "@storybook/addon-actions": "^6.5.5",
+    "@storybook/addon-docs": "^6.5.5",
+    "@storybook/addon-essentials": "^6.5.5",
+    "@storybook/addon-interactions": "^6.5.5",
+    "@storybook/addon-links": "^6.5.5",
+    "@storybook/builder-webpack4": "^6.5.5",
+    "@storybook/manager-webpack4": "^6.5.5",
+    "@storybook/svelte": "^6.5.5",
+    "@storybook/testing-library": "^0.0.11",
+    "@tsconfig/svelte": "^2.0.0",
+    "babel-loader": "^8.2.5",
     "rollup": "^2.3.4",
     "rollup-plugin-css-only": "^3.1.0",
     "rollup-plugin-livereload": "^2.0.0",
     "rollup-plugin-svelte": "^7.0.0",
     "rollup-plugin-terser": "^7.0.0",
-    "svelte": "^3.0.0"
+    "svelte": "^3.48.0",
+    "svelte-check": "^2.0.0",
+    "svelte-forms-lib": "^2.0.1",
+    "svelte-loader": "^3.1.2",
+    "svelte-preprocess": "^4.0.0",
+    "tslib": "^2.0.0",
+    "typescript": "^4.0.0"
   },
   "dependencies": {
-    "sirv-cli": "^2.0.0"
+    "d3": "^7.4.4",
+    "sirv-cli": "^2.0.0",
+    "yup": "^0.32.11"
   }
 }

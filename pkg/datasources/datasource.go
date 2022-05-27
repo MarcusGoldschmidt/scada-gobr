@@ -18,6 +18,7 @@ const (
 	Running
 	Stopping
 	Stopped
+	Finished
 	Disabled
 	Error
 )
@@ -162,6 +163,12 @@ func (c *DataSourceRuntimeManagerCommon) Run(ctx context.Context) error {
 				c.shutdown()
 			}
 			return
+		case <-c.confirmShutdown:
+			if c.mutex.TryLock() && c.status == Running {
+				defer c.mutex.Unlock()
+				c.status = Finished
+				c.shutdown()
+			}
 		}
 	}()
 

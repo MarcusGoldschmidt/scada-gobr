@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	log "github.com/sirupsen/logrus"
+	"os"
+	"os/signal"
 	"scadagobr/pkg"
 )
 
@@ -36,4 +38,15 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	<-c
+
+	ctx, cancel := context.WithTimeout(context.Background(), opt.ShutdownWait)
+	defer cancel()
+
+	scada.Shutdown(ctx)
+	log.Println("shutting down")
+	os.Exit(0)
 }

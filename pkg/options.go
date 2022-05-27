@@ -28,6 +28,9 @@ type ScadagobrOptions struct {
 	refreshExpiration time.Duration
 	refreshKey        []byte
 	key               []byte
+
+	// Shutdown 30 seconds
+	ShutdownWait time.Duration
 }
 
 func DefaultOptions() *ScadagobrOptions {

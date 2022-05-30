@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.2",
+    "@fortawesome/fontawesome-free": "^6.1.1",
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.0.0",
     "@rollup/plugin-typescript": "^8.0.0",
@@ -27,25 +28,30 @@
     "@storybook/testing-library": "^0.0.11",
     "@tsconfig/svelte": "^2.0.0",
     "babel-loader": "^8.2.5",
+    "bulma": "^0.9.4",
+    "d3": "^7.4.4",
+    "font-awesome": "^4.7.0",
+    "node-sass": "^7.0.1",
     "postcss": "^8.4.14",
     "rollup": "^2.3.4",
+    "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-css-only": "^3.1.0",
     "rollup-plugin-livereload": "^2.0.0",
+    "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-svelte": "^7.0.0",
     "rollup-plugin-terser": "^7.0.0",
     "sass": "^1.52.1",
+    "svelma": "^0.4.5",
     "svelte": "^3.48.0",
     "svelte-check": "^2.0.0",
     "svelte-forms-lib": "^2.0.1",
     "svelte-loader": "^3.1.2",
-    "svelte-materialify": "^0.3.11",
     "svelte-preprocess": "^4.10.6",
     "tslib": "^2.0.0",
-    "typescript": "^4.0.0"
+    "typescript": "^4.0.0",
+    "yup": "^0.32.11"
   },
   "dependencies": {
-    "d3": "^7.4.4",
-    "sirv-cli": "^2.0.0",
-    "yup": "^0.32.11"
+    "sirv-cli": "^2.0.0"
   }
 }

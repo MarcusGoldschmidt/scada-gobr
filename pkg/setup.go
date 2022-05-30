@@ -1,17 +1,17 @@
 package pkg
 
 import (
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/runtime"
+	scadaServer "github.com/MarcusGoldschmidt/scadagobr/pkg/server"
 	"github.com/gorilla/mux"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"net/http"
 	"os"
-	"scadagobr/pkg/logger"
-	"scadagobr/pkg/models"
-	"scadagobr/pkg/persistence"
-	"scadagobr/pkg/providers"
-	"scadagobr/pkg/runtime"
-	scadaServer "scadagobr/pkg/server"
 	"strconv"
 	"time"
 )

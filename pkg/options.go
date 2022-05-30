@@ -2,10 +2,10 @@ package pkg
 
 import (
 	"crypto/tls"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/auth"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/spf13/viper"
-	"scadagobr/pkg/auth"
-	"scadagobr/pkg/persistence"
-	"scadagobr/pkg/providers"
 	"time"
 )
 

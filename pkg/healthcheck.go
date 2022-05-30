@@ -2,8 +2,8 @@ package pkg
 
 import (
 	"context"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/server"
 	"net/http"
-	"scadagobr/pkg/server"
 )
 
 func Func(scada *Scadagobr, w http.ResponseWriter, r *http.Request) {

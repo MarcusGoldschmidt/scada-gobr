@@ -2,9 +2,9 @@ package datasources
 
 import (
 	"context"
-	"scadagobr/pkg/logger"
-	"scadagobr/pkg/persistence"
-	"scadagobr/pkg/shared"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"testing"
 	"time"
 )

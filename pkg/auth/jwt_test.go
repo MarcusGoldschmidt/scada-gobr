@@ -1,9 +1,9 @@
 package auth
 
 import (
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/google/uuid"
-	"scadagobr/pkg/models"
-	"scadagobr/pkg/providers"
 	"testing"
 	"time"
 )

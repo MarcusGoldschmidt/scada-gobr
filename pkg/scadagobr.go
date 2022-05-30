@@ -2,15 +2,15 @@ package pkg
 
 import (
 	"context"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/auth"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/runtime"
+	scadaServer "github.com/MarcusGoldschmidt/scadagobr/pkg/server"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 	"net/http"
-	"scadagobr/pkg/auth"
-	"scadagobr/pkg/logger"
-	"scadagobr/pkg/models"
-	"scadagobr/pkg/runtime"
-	scadaServer "scadagobr/pkg/server"
 )
 
 type Scadagobr struct {

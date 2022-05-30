@@ -3,7 +3,7 @@ package persistence
 import (
 	"context"
 	"errors"
-	"scadagobr/pkg/shared"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 )
 
 type InMemoryPersistence struct {

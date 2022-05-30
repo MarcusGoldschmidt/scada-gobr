@@ -1,9 +1,9 @@
 package persistence
 
 import (
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"scadagobr/pkg/models"
 )
 
 type UserPersistence interface {

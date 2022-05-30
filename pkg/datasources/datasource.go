@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"github.com/google/uuid"
-	"scadagobr/pkg/logger"
-	"scadagobr/pkg/shared"
 	"sync"
 	"time"
 )

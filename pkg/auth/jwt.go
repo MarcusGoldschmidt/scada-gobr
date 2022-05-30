@@ -2,11 +2,11 @@ package auth
 
 import (
 	"errors"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
-	"scadagobr/pkg/models"
-	"scadagobr/pkg/persistence"
-	"scadagobr/pkg/providers"
 	"time"
 )
 

@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
-	"scadagobr/pkg"
 )
 
 func main() {

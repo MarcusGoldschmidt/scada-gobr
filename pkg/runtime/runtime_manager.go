@@ -3,11 +3,11 @@ package runtime
 import (
 	"context"
 	"errors"
-	"scadagobr/pkg/datasources"
-	"scadagobr/pkg/logger"
-	"scadagobr/pkg/persistence"
-	"scadagobr/pkg/providers"
-	"scadagobr/pkg/shared"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/datasources"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"sync"
 )
 

@@ -1,9 +1,9 @@
 package pkg
 
 import (
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/datasources"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/server"
 	"gorm.io/gorm"
-	"scadagobr/pkg/datasources"
-	"scadagobr/pkg/server"
 )
 
 func LoadDataSourceRuntimeManager(db *gorm.DB, router *server.Router) []datasources.DataSourceRuntimeManager {

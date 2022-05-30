@@ -2,10 +2,10 @@ package datasources
 
 import (
 	"context"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"math/rand"
-	"scadagobr/pkg/persistence"
-	"scadagobr/pkg/providers"
-	"scadagobr/pkg/shared"
 	"time"
 )
 

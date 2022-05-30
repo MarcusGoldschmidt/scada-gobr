@@ -3,12 +3,12 @@ package server
 import (
 	"context"
 	"embed"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/auth"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/gorilla/mux"
 	"io"
 	"io/fs"
 	"net/http"
-	"scadagobr/pkg/auth"
-	"scadagobr/pkg/logger"
 	"strings"
 )
 

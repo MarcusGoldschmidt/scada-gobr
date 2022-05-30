@@ -55,11 +55,7 @@ func (c *HttpRequestWorker) DataSourceId() shared.CommonId {
 	return c.dataSourceId
 }
 
-func (c *HttpRequestWorker) Run(ctx context.Context, confirmShutdown chan bool, errorChan chan error) {
-	defer func() {
-		confirmShutdown <- true
-	}()
-
+func (c *HttpRequestWorker) Run(ctx context.Context, errorChan chan<- error) {
 	for {
 		select {
 		case <-ctx.Done():

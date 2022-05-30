@@ -57,11 +57,7 @@ type request struct {
 	Timestamp time.Time
 }
 
-func (c *HttpServerWorker) Run(ctx context.Context, confirmShutdown chan bool, errorChan chan error) {
-	defer func() {
-		confirmShutdown <- true
-	}()
-
+func (c *HttpServerWorker) Run(ctx context.Context, errorChan chan<- error) {
 	// TODO: verify best number
 	channel := make(chan []*request, 1024)
 

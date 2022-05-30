@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+//go:generate stringer -type=DataSourceStatus -output=data_source_status_string.go
 type DataSourceStatus int8
 
 const (
@@ -31,8 +32,7 @@ type Datapoint interface {
 }
 
 type DataSourceWorker interface {
-	DataSourceId() shared.CommonId
-	Work(ctx context.Context, confirmShutdown chan bool, errorChan chan error)
+	Work(ctx context.Context, errorChan chan<- error)
 }
 
 //DataSourceWorkerFunc
@@ -54,10 +54,10 @@ type DataSourceWorker interface {
 //		}
 //	}
 //}()
-type DataSourceWorkerFunc func(ctx context.Context, confirmShutdown chan bool, errorChan chan error)
+type DataSourceWorkerFunc func(ctx context.Context, errorChan chan<- error)
 
-func (f DataSourceWorkerFunc) Work(ctx context.Context, confirmShutdown chan bool, errorChan chan error) {
-	f(ctx, confirmShutdown, errorChan)
+func (f DataSourceWorkerFunc) Work(ctx context.Context, errorChan chan<- error) {
+	f(ctx, errorChan)
 }
 
 type DataSourceRuntimeManager interface {
@@ -150,14 +150,18 @@ func (c *DataSourceRuntimeManagerCommon) Run(ctx context.Context) error {
 
 	errorChan := make(chan error)
 
-	go c.worker.Work(ctx, c.confirmShutdown, errorChan)
+	go func() {
+		defer close(c.confirmShutdown)
+
+		c.worker.Work(ctx, errorChan)
+	}()
 
 	go func() {
 		select {
 		case <-ctx.Done():
 			return
 		case err, ok := <-errorChan:
-			if ok {
+			if ok && err != nil {
 				c.status = Error
 				c.errorReason = err
 				c.shutdown()
@@ -191,7 +195,6 @@ func (c *DataSourceRuntimeManagerCommon) Stop(ctx context.Context) error {
 
 	c.shutdown()
 	<-c.confirmShutdown
-	close(c.confirmShutdown)
 	c.confirmShutdown = nil
 
 	c.status = Stopped

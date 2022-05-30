@@ -42,11 +42,7 @@ func NewRandomValueWorker(dataSourceId shared.CommonId, period time.Duration, da
 	return &RandomValueWorker{dataSourceId: dataSourceId, period: period, dataPoints: dataPoints, persistence: persistence}
 }
 
-func (c *RandomValueWorker) Work(ctx context.Context, confirmShutdown chan bool, errorChan chan error) {
-	defer func() {
-		confirmShutdown <- true
-	}()
-
+func (c *RandomValueWorker) Work(ctx context.Context, errorChan chan<- error) {
 	for {
 		select {
 		case <-ctx.Done():

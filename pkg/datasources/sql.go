@@ -43,11 +43,7 @@ func (c *SqlWorker) DataSourceId() shared.CommonId {
 	return c.dataSourceId
 }
 
-func (c *SqlWorker) Run(ctx context.Context, confirmShutdown chan bool, errorChan chan error) {
-	defer func() {
-		confirmShutdown <- true
-	}()
-
+func (c *SqlWorker) Run(ctx context.Context, errorChan chan<- error) {
 	db, err := sql.Open(c.Driver, c.ConnectionString)
 
 	if err != nil {
@@ -55,13 +51,13 @@ func (c *SqlWorker) Run(ctx context.Context, confirmShutdown chan bool, errorCha
 		return
 	}
 
+	defer db.Close()
+
 	err = db.Ping()
 	if err != nil {
 		errorChan <- err
 		return
 	}
-
-	defer db.Close()
 
 	for {
 		select {

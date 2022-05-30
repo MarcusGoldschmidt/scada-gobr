@@ -12,17 +12,21 @@ import (
 
 func TestSimpleDataSourceRuntimeManagerCommon(t *testing.T) {
 
+	ctx := context.Background()
 	log := logger.NewTestLogger(t)
 
 	datasource := NewDataSourceRuntimeManagerCommon(shared.CommonId(uuid.New()), "teste", log)
-	ctx := context.Background()
-	work := make(chan error)
 
-	go func() {
-		work <- nil
-		<-time.After(1 * time.Second)
-		work <- errors.New("Teste")
-	}()
+	datasource.WithWorker(DataSourceWorkerFunc(func(ctx context.Context, errorChan chan<- error) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(1 * time.Second):
+
+			}
+		}
+	}))
 
 	err := datasource.Run(ctx)
 	if err != nil {
@@ -31,28 +35,27 @@ func TestSimpleDataSourceRuntimeManagerCommon(t *testing.T) {
 }
 
 func TestSimpleDataSourceRuntimeError(t *testing.T) {
-
+	ctx := context.Background()
 	log := logger.NewTestLogger(t)
 
 	datasource := NewDataSourceRuntimeManagerCommon(shared.CommonId(uuid.New()), "teste", log)
-	ctx := context.Background()
-	work := make(chan error)
-
-	go func() {
-		work <- nil
-
-		work <- nil
-	}()
+	datasource.WithWorker(DataSourceWorkerFunc(func(ctx context.Context, errorChan chan<- error) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(1):
+				errorChan <- errors.New("error test")
+			}
+		}
+	}))
 
 	err := datasource.Run(ctx)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = datasource.Stop(ctx)
-	if err != nil {
-		t.Error(err)
-	}
+	<-time.After(time.Second)
 
 	if datasource.status != Error {
 		t.Fail()

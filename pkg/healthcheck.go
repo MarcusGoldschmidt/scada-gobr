@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func Func(scada *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func HealthCheckHandler(scada *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	server.Handler(
 		server.WithChecker(
 			"database", server.CheckerFunc(func(ctx context.Context) error {

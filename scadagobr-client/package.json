@@ -5,7 +5,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "start": "sirv public --no-clear",
+    "start": "sirv public --no-clear --single",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
     "check": "svelte-check --tsconfig ./tsconfig.json"
@@ -15,6 +15,7 @@
     "@fortawesome/fontawesome-free": "^6.1.1",
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.0.0",
+    "@rollup/plugin-replace": "^4.0.0",
     "@rollup/plugin-typescript": "^8.0.0",
     "@storybook/addon-actions": "^6.5.5",
     "@storybook/addon-docs": "^6.5.5",
@@ -27,9 +28,12 @@
     "@storybook/svelte": "^6.5.5",
     "@storybook/testing-library": "^0.0.11",
     "@tsconfig/svelte": "^2.0.0",
+    "@types/yup": "^0.29.14",
+    "axios": "^0.27.2",
     "babel-loader": "^8.2.5",
     "bulma": "^0.9.4",
     "d3": "^7.4.4",
+    "dotenv": "^16.0.1",
     "font-awesome": "^4.7.0",
     "node-sass": "^7.0.1",
     "postcss": "^8.4.14",
@@ -47,6 +51,7 @@
     "svelte-forms-lib": "^2.0.1",
     "svelte-loader": "^3.1.2",
     "svelte-preprocess": "^4.10.6",
+    "svelte-routing": "^1.6.0",
     "tslib": "^2.0.0",
     "typescript": "^4.0.0",
     "yup": "^0.32.11"

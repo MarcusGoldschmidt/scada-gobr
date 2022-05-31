@@ -5,8 +5,8 @@ import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/auth"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/runtime"
-	scadaServer "github.com/MarcusGoldschmidt/scadagobr/pkg/server"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
@@ -18,6 +18,9 @@ type Scadagobr struct {
 	Logger         logger.Logger
 	Db             *gorm.DB
 	Option         *ScadagobrOptions
+
+	UserPersistence persistence.UserPersistence
+	JwtHandler      *auth.JwtHandler
 
 	server *http.Server
 	router *mux.Router
@@ -68,48 +71,4 @@ func (s *Scadagobr) Shutdown(ctx context.Context) {
 	}
 
 	s.RuntimeManager.StopAll(ctx)
-}
-
-type RequestHandlerFunction func(scada *Scadagobr, w http.ResponseWriter, r *http.Request)
-
-func (s *Scadagobr) handleRequest(function RequestHandlerFunction) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		function(s, w, r)
-	}
-}
-
-func (s *Scadagobr) handleJwtRequest(jwtHandler *auth.JwtHandler, function RequestHandlerFunction) http.Handler {
-
-	callback := s.handleRequest(function)
-
-	httpFunction := scadaServer.NewJwtHttpFunc(callback, jwtHandler, s.Logger)
-
-	return httpFunction
-}
-
-func (s *Scadagobr) setRouters() {
-	//userPersistence := persistence.NewUserPersistenceImp(s.Db)
-
-	//jwtHandler := SetupJwtHandler(s.Option, userPersistence)
-
-	s.get("/api/healthcheck", s.handleRequest(Func))
-}
-
-func (s *Scadagobr) get(path string, f func(w http.ResponseWriter, r *http.Request)) {
-	s.router.HandleFunc(path, f).Methods("GET")
-}
-
-// Post wraps the router for POST method
-func (s *Scadagobr) post(path string, f func(w http.ResponseWriter, r *http.Request)) {
-	s.router.HandleFunc(path, f).Methods("POST")
-}
-
-// Put wraps the router for PUT method
-func (s *Scadagobr) put(path string, f func(w http.ResponseWriter, r *http.Request)) {
-	s.router.HandleFunc(path, f).Methods("PUT")
-}
-
-// Delete wraps the router for DELETE method
-func (s *Scadagobr) delete(path string, f func(w http.ResponseWriter, r *http.Request)) {
-	s.router.HandleFunc(path, f).Methods("DELETE")
 }

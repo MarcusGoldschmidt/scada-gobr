@@ -44,6 +44,9 @@ func DefaultOptions() *ScadagobrOptions {
 		DevMode:                  false,
 		AdminPassword:            "admin",
 		PostgresConnectionString: "scadagobr",
+		refreshExpiration:        15 * 24 * time.Hour,
+		expiration:               15 * time.Minute,
+		ShutdownWait:             30 * time.Second,
 	}
 }
 

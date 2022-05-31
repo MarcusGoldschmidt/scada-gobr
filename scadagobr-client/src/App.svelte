@@ -1,13 +1,28 @@
 <script lang="ts">
-    import Login from "./components/auth/Login.svelte";
+    import {Route, Router} from "svelte-routing";
 
+    import Login from "./components/auth/Login.svelte";
+    import PrivateRoute from "./components/infra/PrivateRoute.svelte";
+    import Notifications from "./components/infra/Notifications.svelte";
 </script>
 
-<main>
+<Notifications/>
 
-    <Login
-    ></Login>
-</main>
+<Router>
+    <main>
+        <Route path="/">
+            <PrivateRoute>
+                <h3>Home</h3>
+                <p>Home sweet home...</p>
+            </PrivateRoute>
+        </Route>
+
+        <Route path="/login">
+            <Login/>
+        </Route>
+    </main>
+</Router>
+
 
 <style lang="scss">
   :global {

@@ -7,6 +7,8 @@ import preprocess from 'svelte-preprocess';
 import typescript from '@rollup/plugin-typescript';
 import css from 'rollup-plugin-css-only';
 import postcss from 'rollup-plugin-postcss'
+import replace from '@rollup/plugin-replace';
+
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -40,11 +42,17 @@ export default {
         file: 'public/build/bundle.js'
     },
     plugins: [
+        replace({
+            ROLLUP_REPLACE_ENVIROMENT: JSON.stringify({
+                API_BASE_URL: process.env.API_BASE_URL || 'http://localhost:11139'
+            })
+        }),
         svelte({
-            preprocess: preprocess(),
+            preprocess: preprocess({ sourceMap: !production }),
             compilerOptions: {
                 // enable run-time checks when not in production
-                dev: !production
+                dev: !production,
+                hydratable: true
             }
         }),
         // we'll extract any component CSS out into

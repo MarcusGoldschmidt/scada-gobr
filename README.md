@@ -36,7 +36,7 @@ Code released under [the GPL license](https://github.com/SCADA-LTS/Scada-LTS/blo
 * Open telemetry
 * Internationalization 
 * Prometheus metrics
-* Load data sources runtime across a cluster of scada-gobr with consensus and then create a k8s operator
+* Load data sources runtime across a cluster of s-gobr with consensus and then create a k8s operator
 * Control with script
 
 ## Building the application

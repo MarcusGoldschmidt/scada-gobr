@@ -1,10 +1,7 @@
 package server
 
 import (
-	"context"
 	"embed"
-	"github.com/MarcusGoldschmidt/scadagobr/pkg/auth"
-	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/gorilla/mux"
 	"io"
 	"io/fs"
@@ -31,6 +28,11 @@ func SetupSpa(r *mux.Router, devMode bool) error {
 				path = path[1:]
 			}
 
+			if strings.HasPrefix(path, "api") {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+
 			_, err := files.Open(path)
 
 			if err != nil {
@@ -53,36 +55,4 @@ func SetupSpa(r *mux.Router, devMode bool) error {
 	}
 
 	return nil
-}
-
-type JwtHttpFunc struct {
-	callback http.Handler
-	handler  *auth.JwtHandler
-	logger   logger.Logger
-}
-
-func NewJwtHttpFunc(callback http.Handler, handler *auth.JwtHandler, logger logger.Logger) *JwtHttpFunc {
-	return &JwtHttpFunc{callback: callback, handler: handler, logger: logger}
-}
-
-func (j JwtHttpFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	reqToken := r.Header.Get("Authorization")
-	splitToken := strings.Split(reqToken, "Bearer ")
-	reqToken = splitToken[1]
-
-	claims, err := j.handler.ValidateJwt(reqToken)
-	if err != nil {
-		if err == auth.ErrUnauthorized {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		j.logger.Errorf("%s", err.Error())
-		return
-	}
-
-	ctx := context.WithValue(r.Context(), auth.ContexClaimsKey, claims)
-
-	r = r.WithContext(ctx)
-
-	j.callback.ServeHTTP(w, r)
 }

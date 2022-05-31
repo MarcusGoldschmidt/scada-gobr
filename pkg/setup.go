@@ -45,12 +45,18 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 
 	simpleLog := logger.NewSimpleLogger("SCADA", os.Stdout)
 
+	userPersistence := persistence.NewUserPersistenceImp(db)
+
+	jwtHandler := SetupJwtHandler(opt, userPersistence)
+
 	scada := &Scadagobr{
-		RuntimeManager: runtimeManager,
-		Logger:         simpleLog,
-		Db:             db,
-		Option:         opt,
-		router:         r,
+		RuntimeManager:  runtimeManager,
+		Logger:          simpleLog,
+		Db:              db,
+		Option:          opt,
+		router:          r,
+		UserPersistence: userPersistence,
+		JwtHandler:      jwtHandler,
 	}
 
 	scada.setRouters()

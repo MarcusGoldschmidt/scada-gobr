@@ -7,6 +7,5 @@ const storedUser = JSON.parse(localStorage.getItem(AuthStoreKey));
 export const authStore = writable<CurrentUser>(storedUser);
 
 authStore.subscribe(value => {
-    console.log(value)
     localStorage.setItem(AuthStoreKey, JSON.stringify(value));
 });

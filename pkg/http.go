@@ -2,7 +2,9 @@ package pkg
 
 import (
 	"encoding/json"
+	"github.com/go-playground/validator/v10"
 	"net/http"
+	"strings"
 )
 
 func (s *Scadagobr) respondJsonOk(w http.ResponseWriter, payload interface{}) {
@@ -29,6 +31,23 @@ func (s *Scadagobr) respondJson(w http.ResponseWriter, status int, payload inter
 }
 
 func (s *Scadagobr) respondError(w http.ResponseWriter, err error) {
+	if _, ok := err.(*validator.InvalidValidationError); ok {
+		s.respondJson(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+
+	if err, ok := err.(validator.ValidationErrors); ok {
+		response := map[string]string{}
+
+		for _, fieldError := range err {
+			key := strings.ToLower(fieldError.Field()[0:1]) + fieldError.Field()[1:]
+			response[key] = fieldError.Tag()
+		}
+
+		s.respondJson(w, http.StatusBadRequest, map[string]any{"errors": response})
+		return
+	}
+
 	s.Logger.Errorf("%s", err.Error())
 	s.respondJson(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 }

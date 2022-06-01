@@ -37,9 +37,8 @@
         const success = await loginUser(username, password)
 
         if (success) {
-            navigate(globalHistory.location.state.from)
+            navigate(globalHistory.location.state.from || "/")
         }
-
     }
 </script>
 

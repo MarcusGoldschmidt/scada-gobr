@@ -44,6 +44,7 @@
     top: 0;
     right: 0;
     width: 20vw;
+    z-index: 999;
   }
 </style>
 

@@ -65,7 +65,7 @@ export async function loginUser(name, password) {
             jwt
         })
 
-        sendNotification("Successful login", "", NotificationType.Info)
+        sendNotification("Successful login", "", NotificationType.Info, 10000)
 
         return true;
     } catch (e) {

@@ -32,6 +32,7 @@ func (s *Scadagobr) delete(path string, f RequestHandlerFunction) {
 }
 
 func (s *Scadagobr) setRouters() {
+	s.setupLogs()
 	s.setupCors()
 
 	s.get("/api/healthcheck", HealthCheckHandler)
@@ -39,6 +40,11 @@ func (s *Scadagobr) setRouters() {
 	// Auth
 	s.post("/api/v1/auth/login", LoginHandler)
 	s.post("/api/v1/auth/refresh-token", RefreshTokenHandler)
-
 	s.get("/api/v1/auth/who-am-i", s.jwtMiddleware(WhoAmIHandler))
+
+	// Users
+	s.get("/api/v1/user", s.jwtMiddleware(GetUsersHandler))
+	s.post("/api/v1/user", s.jwtMiddleware(CreateUserHandler))
+	s.put("/api/v1/user/{id}", s.jwtMiddleware(UpdateUserHandler))
+	s.delete("/api/v1/user/{id}", s.jwtMiddleware(DeleteUserHandler))
 }

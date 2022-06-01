@@ -4,12 +4,14 @@
     import Login from "./components/auth/Login.svelte";
     import PrivateRoute from "./components/infra/PrivateRoute.svelte";
     import Notifications from "./components/infra/Notifications.svelte";
+    import Navbar from "./components/Navbar.svelte";
 </script>
+<main>
+    <Notifications/>
+    <Navbar></Navbar>
 
-<Notifications/>
+    <Router>
 
-<Router>
-    <main>
         <Route path="/">
             <PrivateRoute>
                 <h3>Home</h3>
@@ -20,9 +22,9 @@
         <Route path="/login">
             <Login/>
         </Route>
-    </main>
-</Router>
+    </Router>
 
+</main>
 
 <style lang="scss">
   :global {
@@ -30,7 +32,6 @@
 
     @import '@fortawesome/fontawesome-free/css/all.css';
     @import 'bulma/bulma';
-
   }
 
   @media (min-width: 640px) {

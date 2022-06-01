@@ -13,8 +13,15 @@ type SimpleLogger struct {
 
 // NewSimpleLogger ...
 func NewSimpleLogger(name string, out io.Writer) Logger {
+
+	logger := log.New()
+
+	logger.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
+
 	return &SimpleLogger{
-		Logger:   log.New(),
+		Logger:   logger,
 		LogLevel: logLevelFromEnvironment(),
 	}
 }

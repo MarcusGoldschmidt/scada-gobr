@@ -13,6 +13,7 @@ type loginRequest struct {
 }
 
 func LoginHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
 	var request loginRequest
 	reqBody, err := ioutil.ReadAll(r.Body)
@@ -27,7 +28,7 @@ func LoginHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := s.UserPersistence.GetUserByName(request.Name)
+	user, err := s.userPersistence.GetUserByName(ctx, request.Name)
 	if err != nil {
 		s.respondError(w, err)
 		return
@@ -55,6 +56,8 @@ func LoginHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 }
 
 func RefreshTokenHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	var request map[string]string
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -68,7 +71,7 @@ func RefreshTokenHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := s.JwtHandler.RefreshToken(request["refreshToken"])
+	response, err := s.JwtHandler.RefreshToken(ctx, request["refreshToken"])
 	if err != nil {
 		s.respondError(w, err)
 		return

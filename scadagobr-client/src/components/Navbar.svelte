@@ -1,6 +1,6 @@
 <script lang="ts">
     import {authStore} from "../shared/stores/user";
-    import {navigate} from "svelte-routing";
+    import {link, navigate} from "svelte-routing";
 
     let isLogin = false
 
@@ -12,25 +12,25 @@
 {#if (isLogin)}
     <nav class="navbar is-white">
         <div class="navbar-brand">
-            <a class="navbar-item brand-text" href="#">
-                Bulma Admin
+            <a class="navbar-item brand-text" href="/" use:link>
+                GOBR
             </a>
         </div>
         <div id="navMenu" class="navbar-menu">
             <div class="navbar-start">
-                <a class="navbar-item" href="#">
+                <a class="navbar-item" href="#" use:link>
                     Watch list
                 </a>
-                <a class="navbar-item" href="#">
+                <a class="navbar-item" href="#" use:link>
                     Graphical views
                 </a>
-                <a class="navbar-item" href="#">
+                <a class="navbar-item" href="#" use:link>
                     Data sources
                 </a>
-                <a class="navbar-item" href="#">
+                <a class="navbar-item" href="/users" use:link>
                     Users
                 </a>
-                <a class="navbar-item" href="#">
+                <a class="navbar-item" href="#" use:link>
                     Reports
                 </a>
             </div>

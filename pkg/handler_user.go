@@ -42,17 +42,49 @@ func GetUsersHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var users []UserResponse
+	users, err := s.userPersistence.GetUsers(ctx, request)
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
 
-	s.Db.WithContext(ctx).Model(&models.User{}).Scopes(request.GormScope).Order("name").Find(&users)
 	s.respondJsonOk(w, users)
 }
 
+func GetUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id, err := uuid.Parse(mux.Vars(r)["id"])
+
+	if err != nil {
+		s.respondError(w, errors.New("id must be a uuid4"))
+		return
+	}
+
+	claims, err := auth.GetUserFromContext(ctx)
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
+	if !claims.Admin {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	user, err := s.userPersistence.GetUserById(ctx, id)
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+	s.respondJsonOk(w, user)
+}
+
 type CreateUserRequest struct {
-	Name          string  `validate:"required,alphaunicode"`
-	Email         *string `validate:"omitempty,email"`
+	Name          string `validate:"required,alphaunicode"`
+	Email         *string
 	HomeUrl       string
-	Administrator bool   `validate:"required"`
+	Administrator bool
 	Password      string `validate:"required,gte=6"`
 }
 
@@ -89,22 +121,28 @@ func CreateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := s.Db.WithContext(ctx)
-	var count int64
-	err = db.Model(&models.User{}).Where(&models.User{Name: request.Name}).Count(&count).Error
+	if *request.Email != "" {
+		err := server.Validate.Var(request.Email, "email")
+		if err != nil {
+			s.respondError(w, err)
+			return
+		}
+	}
+
+	userName, err := s.userPersistence.GetUserByName(ctx, request.Name)
 	if err != nil {
 		s.respondError(w, err)
 		return
 	}
 
-	if count != 0 {
+	if userName != nil {
 		s.respondError(w, errors.New("the username already in use"))
 		return
 	}
 
 	user := request.ToUser()
 
-	err = db.Create(user).Error
+	err = s.userPersistence.CreateUser(ctx, user)
 	if err != nil {
 		s.respondError(w, err)
 		return
@@ -114,10 +152,10 @@ func CreateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 }
 
 type UpdateUserRequest struct {
-	Name          string  `validate:"required,alphaunicode"`
-	Email         *string `validate:"omitempty,email"`
+	Name          string `validate:"required,alphaunicode"`
+	Email         *string
 	HomeUrl       string
-	Administrator bool   `validate:"required"`
+	Administrator bool
 	Password      string `validate:"omitempty,gte=6"`
 }
 
@@ -147,22 +185,28 @@ func UpdateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := s.Db.WithContext(ctx)
-	var user models.User
-	err = db.Model(&models.User{}).First(&user, "id = ?", id.String()).Error
+	if *request.Email != "" {
+		err := server.Validate.Var(request.Email, "email")
+		if err != nil {
+			s.respondError(w, err)
+			return
+		}
+	}
+
+	user, err := s.userPersistence.GetUserById(ctx, id)
 	if err != nil {
 		s.respondError(w, err)
 		return
 	}
 
-	var count int64
-	err = db.Model(&models.User{}).Where("id <> ? AND name = ?", id.String(), request.Name).Count(&count).Error
+	valid, err := s.userPersistence.IsValidUsernameForUser(ctx, request.Name, user.ID)
+
 	if err != nil {
 		s.respondError(w, err)
 		return
 	}
 
-	if count != 0 {
+	if !valid {
 		s.respondError(w, errors.New("the username already in use"))
 		return
 	}
@@ -172,11 +216,15 @@ func UpdateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	user.Administrator = request.Administrator
 	user.Email = request.Email
 
+	if id == claims.Id && claims.Admin {
+		user.Administrator = true
+	}
+
 	if request.Password != "" {
 		user.PasswordHash = auth.MakeHash(request.Password)
 	}
 
-	err = db.Save(user).Error
+	err = s.userPersistence.UpdateUser(ctx, user)
 	if err != nil {
 		s.respondError(w, err)
 		return
@@ -210,9 +258,7 @@ func DeleteUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := s.Db.WithContext(ctx)
-
-	err = db.Delete(&models.User{ID: id}).Error
+	err = s.userPersistence.DeleteUser(ctx, id)
 	if err != nil {
 		s.respondError(w, err)
 		return

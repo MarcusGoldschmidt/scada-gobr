@@ -23,12 +23,11 @@ axiosJwt.interceptors.request.use(async (config) => {
     ) {
         const staticAuthStore = get(authStore)
 
-        const userTokenExpiration = new Date(staticAuthStore.jwt.expiration);
+        const userTokenExpiration = new Date(+staticAuthStore.jwt.tokenExpiration * 1000);
         const today = new Date();
 
         if (today > userTokenExpiration) {
 
-            // TODO: criar refresh token
             const refreshToken = staticAuthStore.jwt.refreshToken;
 
             const {data} = await axiosJwt.post<JwtToken>(PathsV1.RefreshToken, {
@@ -65,7 +64,7 @@ export async function loginUser(name, password) {
             jwt
         })
 
-        sendNotification("Successful login", "", NotificationType.Info, 10000)
+        sendNotification("Successful login", "", NotificationType.Info)
 
         return true;
     } catch (e) {

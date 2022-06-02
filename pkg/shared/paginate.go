@@ -2,7 +2,6 @@ package shared
 
 import (
 	"errors"
-	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
@@ -14,10 +13,10 @@ type PaginationRequest struct {
 }
 
 func NewPaginationRequest(r *http.Request) (*PaginationRequest, error) {
-	vars := mux.Vars(r)
+	queryStrings := r.URL.Query()
 
-	page, ok := vars["page"]
-	if !ok {
+	page := queryStrings.Get("page")
+	if page == "" {
 		page = "1"
 	}
 
@@ -26,8 +25,8 @@ func NewPaginationRequest(r *http.Request) (*PaginationRequest, error) {
 		return nil, errors.New("page is not a number")
 	}
 
-	size, ok := vars["size"]
-	if !ok {
+	size := queryStrings.Get("size")
+	if size == "" {
 		size = "20"
 	}
 

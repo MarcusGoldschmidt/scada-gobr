@@ -3,7 +3,7 @@ package datasources
 import (
 	"context"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
-	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence/in_memory"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"testing"
 	"time"
@@ -17,11 +17,11 @@ func TestSimpleRuntime(t *testing.T) {
 	common := NewDataSourceRuntimeManagerCommon(shared.NewCommonId(), "teste", testLogger)
 
 	pointCommon := NewDataPointCommon(shared.NewCommonId(), "randon", true)
-	dataPoint := NewRandonValueDataPoint(pointCommon, 0, 100)
+	dataPoint := NewRandomValueDataPoint(pointCommon, 0, 100)
 
-	memoryPersistence := persistence.NewInMemoryPersistence()
+	memoryPersistence := in_memory.NewInMemoryPersistence()
 
-	worker := NewRandomValueWorker(shared.NewCommonId(), 1*time.Second, []*RandonValueDataPoint{dataPoint}, memoryPersistence)
+	worker := NewRandomValueWorker(shared.NewCommonId(), 1*time.Second, []*RandomValueDataPoint{dataPoint}, memoryPersistence)
 
 	common.WithWorker(worker)
 	err := common.Run(ctx)

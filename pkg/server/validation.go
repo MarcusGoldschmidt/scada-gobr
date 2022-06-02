@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-var Validate *validator.Validate = validator.New()
+var Validate = validator.New()
 
 func ValidateFromBody[T any](r *http.Request) (*T, error) {
 	var response T

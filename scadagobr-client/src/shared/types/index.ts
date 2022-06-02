@@ -1,6 +1,6 @@
 export interface JwtToken {
     token: string
-    expiration: string
+    tokenExpiration: string
     refreshToken: string
 }
 
@@ -17,3 +17,9 @@ export type CurrentUser = {
 export type LoginHandler = (email: string, password: string) => Promise<JwtToken | undefined>
 
 export type WhoIam = (token: JwtToken) => Promise<User>
+
+export enum LoadingStatus {
+    Fetching,
+    Error,
+    Success,
+}

@@ -9,27 +9,27 @@ import (
 	"time"
 )
 
-type RandonValueDataPoint struct {
-	*DataPointCommon
+type RandomValueDataPoint struct {
+	common       *DataPointCommon
 	InitialValue int64
 	EndValue     int64
 }
 
-func NewRandonValueDataPoint(dataPointCommon *DataPointCommon, initialValue int64, endValue int64) *RandonValueDataPoint {
-	return &RandonValueDataPoint{DataPointCommon: dataPointCommon, InitialValue: initialValue, EndValue: endValue}
+func NewRandomValueDataPoint(dataPointCommon *DataPointCommon, initialValue int64, endValue int64) *RandomValueDataPoint {
+	return &RandomValueDataPoint{common: dataPointCommon, InitialValue: initialValue, EndValue: endValue}
 }
 
-func (r RandonValueDataPoint) Id() shared.CommonId {
-	return r.id
+func (r RandomValueDataPoint) Id() shared.CommonId {
+	return r.common.Id
 }
 
-func (r RandonValueDataPoint) Name() string {
-	return r.name
+func (r RandomValueDataPoint) Name() string {
+	return r.common.Name
 }
 
 type RandomValueWorker struct {
 	period       time.Duration
-	dataPoints   []*RandonValueDataPoint
+	dataPoints   []*RandomValueDataPoint
 	persistence  persistence.DataPointPersistence
 	dataSourceId shared.CommonId
 }
@@ -38,7 +38,7 @@ func (c *RandomValueWorker) DataSourceId() shared.CommonId {
 	return c.dataSourceId
 }
 
-func NewRandomValueWorker(dataSourceId shared.CommonId, period time.Duration, dataPoints []*RandonValueDataPoint, persistence persistence.DataPointPersistence) *RandomValueWorker {
+func NewRandomValueWorker(dataSourceId shared.CommonId, period time.Duration, dataPoints []*RandomValueDataPoint, persistence persistence.DataPointPersistence) *RandomValueWorker {
 	return &RandomValueWorker{dataSourceId: dataSourceId, period: period, dataPoints: dataPoints, persistence: persistence}
 }
 

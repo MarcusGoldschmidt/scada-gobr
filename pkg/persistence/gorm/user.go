@@ -1,16 +1,10 @@
-package persistence
+package gorm
 
 import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
-
-type UserPersistence interface {
-	GetUserById(uuid.UUID) (*models.User, error)
-	GetUserByEmail(string) (*models.User, error)
-	GetUserByName(string) (*models.User, error)
-}
 
 type UserPersistenceImp struct {
 	db *gorm.DB

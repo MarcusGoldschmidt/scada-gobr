@@ -15,21 +15,24 @@ import (
 )
 
 type HttpServerDataPoint struct {
-	*DataPointCommon
+	common        *DataPointCommon
 	rowIdentifier string
 	dateFormat    string
 }
 
+func NewHttpServerDataPoint(common *DataPointCommon, rowIdentifier string, dateFormat string) *HttpServerDataPoint {
+	return &HttpServerDataPoint{common: common, rowIdentifier: rowIdentifier, dateFormat: dateFormat}
+}
+
 func (r HttpServerDataPoint) Id() shared.CommonId {
-	return r.id
+	return r.common.Id
 }
 
 func (r HttpServerDataPoint) Name() string {
-	return r.name
+	return r.common.Name
 }
 
 type HttpServerWorker struct {
-	Period     time.Duration
 	DataPoints []*HttpServerDataPoint
 
 	Router       *server.Router
@@ -41,6 +44,10 @@ type HttpServerWorker struct {
 	AtmDone     int32
 
 	dataSourceId shared.CommonId
+}
+
+func (c *HttpServerWorker) SetDataSourceId(dataSourceId shared.CommonId) {
+	c.dataSourceId = dataSourceId
 }
 
 func (c *HttpServerWorker) WithDataSourceId(dataSourceId shared.CommonId) {
@@ -72,16 +79,16 @@ func (c *HttpServerWorker) Run(ctx context.Context, errorChan chan<- error) {
 			return
 		case data := <-channel:
 
-			dict := make(map[string]*shared.CommonId)
+			dict := make(map[string]shared.CommonId)
 
 			for _, point := range c.DataPoints {
-				dict[point.rowIdentifier] = &point.id
+				dict[point.rowIdentifier] = point.Id()
 			}
 
 			series := make([]*shared.IdSeries, 0)
 			for _, d := range data {
 				if id, ok := dict[d.Name]; ok {
-					series = append(series, shared.NewIdSeries(*id, d.Value, d.Timestamp))
+					series = append(series, shared.NewIdSeries(id, d.Value, d.Timestamp))
 				}
 			}
 

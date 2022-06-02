@@ -32,16 +32,12 @@ type Datapoint interface {
 }
 
 type DataSourceWorker interface {
-	Work(ctx context.Context, errorChan chan<- error)
+	Run(ctx context.Context, errorChan chan<- error)
 }
 
 //DataSourceWorkerFunc
 //
 //func(ctx context.Context, confirmShutdown chan uuid.UUID, errorChan chan error) {
-//	defer func() {
-//		confirmShutdown <- c.runtimeId
-//	}()
-//
 //	for {
 //		select {
 //		case <-ctx.Done():
@@ -53,13 +49,14 @@ type DataSourceWorker interface {
 //			}
 //		}
 //	}
-//}()
+//}
 type DataSourceWorkerFunc func(ctx context.Context, errorChan chan<- error)
 
-func (f DataSourceWorkerFunc) Work(ctx context.Context, errorChan chan<- error) {
+func (f DataSourceWorkerFunc) Run(ctx context.Context, errorChan chan<- error) {
 	f(ctx, errorChan)
 }
 
+//go:generate go run ../../tools/generators/datasource_types.go
 type DataSourceRuntimeManager interface {
 	Id() shared.CommonId
 	Name() string
@@ -69,6 +66,10 @@ type DataSourceRuntimeManager interface {
 	Run(ctx context.Context) error
 	Stop(ctx context.Context) error
 	Restart(ctx context.Context) error
+
+	GetError() error
+
+	WithWorker(worker DataSourceWorker)
 }
 
 type DataSourceRuntimeManagerCommon struct {
@@ -100,6 +101,10 @@ func (c *DataSourceRuntimeManagerCommon) RuntimeId() uuid.UUID {
 
 func (c *DataSourceRuntimeManagerCommon) Status() DataSourceStatus {
 	return c.status
+}
+
+func (c *DataSourceRuntimeManagerCommon) GetError() error {
+	return c.errorReason
 }
 
 func (c *DataSourceRuntimeManagerCommon) Restart(ctx context.Context) error {
@@ -153,7 +158,7 @@ func (c *DataSourceRuntimeManagerCommon) Run(ctx context.Context) error {
 	go func() {
 		defer close(c.confirmShutdown)
 
-		c.worker.Work(ctx, errorChan)
+		c.worker.Run(ctx, errorChan)
 	}()
 
 	go func() {
@@ -199,17 +204,17 @@ func (c *DataSourceRuntimeManagerCommon) Stop(ctx context.Context) error {
 
 	c.status = Stopped
 
-	c.logger.Infof("Shutdown completed of data source id: %s take %d Milliseconds", c.runtimeId.String(), time.Since(start).Milliseconds())
+	c.logger.Infof("Shutdown completed of data source Id: %s take %d Milliseconds", c.runtimeId.String(), time.Since(start).Milliseconds())
 
 	return nil
 }
 
 type DataPointCommon struct {
-	id       shared.CommonId
-	name     string
-	isEnable bool
+	Id       shared.CommonId
+	Name     string
+	IsEnable bool
 }
 
 func NewDataPointCommon(id shared.CommonId, name string, isEnable bool) *DataPointCommon {
-	return &DataPointCommon{id: id, name: name, isEnable: isEnable}
+	return &DataPointCommon{Id: id, Name: name, IsEnable: isEnable}
 }

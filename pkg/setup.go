@@ -1,9 +1,10 @@
 package pkg
 
 import (
-	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
+	custonLogger "github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
-	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
+	gorm2 "github.com/MarcusGoldschmidt/scadagobr/pkg/persistence/gorm"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence/in_memory"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/runtime"
 	scadaServer "github.com/MarcusGoldschmidt/scadagobr/pkg/server"
@@ -17,15 +18,15 @@ import (
 )
 
 func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
-	loggerImp := logger.NewSimpleLogger("RUNTIME-MANAGER", os.Stdout)
-	persistenceImp := persistence.NewInMemoryPersistence()
+	loggerImp := custonLogger.NewSimpleLogger("RUNTIME-MANAGER", os.Stdout)
+	persistenceImp := in_memory.NewInMemoryPersistence()
 	runtimeManager := runtime.NewRuntimeManager(loggerImp, persistenceImp)
 
 	runtimeManager.WithTimeProvider(providers.UtcTimeProvider{})
 
-	scadaRouter := scadaServer.NewRouter()
-
-	db, err := gorm.Open(postgres.Open(opt.PostgresConnectionString), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(opt.PostgresConnectionString), &gorm.Config{
+		Logger: custonLogger.NewGormLogger(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -35,6 +36,8 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 		return nil, err
 	}
 
+	scadaRouter := scadaServer.NewRouter()
+
 	datasource := LoadDataSourceRuntimeManager(db, scadaRouter)
 
 	runtimeManager.AddDataSource(datasource...)
@@ -43,11 +46,11 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 
 	r.Handle("/api/datasource/integration", scadaRouter)
 
-	simpleLog := logger.NewSimpleLogger("SCADA", os.Stdout)
-
-	userPersistence := persistence.NewUserPersistenceImp(db)
+	userPersistence := gorm2.NewUserPersistenceImp(db)
 
 	jwtHandler := SetupJwtHandler(opt, userPersistence)
+
+	simpleLog := custonLogger.NewSimpleLogger("SCADA", os.Stdout)
 
 	scada := &Scadagobr{
 		RuntimeManager:  runtimeManager,
@@ -55,7 +58,7 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 		Db:              db,
 		Option:          opt,
 		router:          r,
-		UserPersistence: userPersistence,
+		userPersistence: userPersistence,
 		JwtHandler:      jwtHandler,
 	}
 

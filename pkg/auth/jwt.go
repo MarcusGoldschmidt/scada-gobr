@@ -67,7 +67,7 @@ func (handler *JwtHandler) ValidateJwt(token string) (*Claims, error) {
 	return claims, nil
 }
 
-func (handler *JwtHandler) RefreshToken(refreshToken string) (*JwtResponse, error) {
+func (handler *JwtHandler) RefreshToken(ctx context.Context, refreshToken string) (*JwtResponse, error) {
 
 	claims := &Claims{}
 
@@ -82,7 +82,7 @@ func (handler *JwtHandler) RefreshToken(refreshToken string) (*JwtResponse, erro
 		return nil, ErrUnauthorized
 	}
 
-	user, err := handler.UserPersistence.GetUserById(claims.Id)
+	user, err := handler.UserPersistence.GetUserById(ctx, claims.Id)
 	if err != nil {
 		return nil, err
 	}

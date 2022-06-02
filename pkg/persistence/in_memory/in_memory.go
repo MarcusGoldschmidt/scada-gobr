@@ -1,31 +1,39 @@
-package persistence
+package in_memory
 
 import (
 	"context"
-	"errors"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
+	"time"
 )
 
 type InMemoryPersistence struct {
 	data map[shared.CommonId][]*shared.Series
 }
 
-func (f InMemoryPersistence) GetPointValues(id shared.CommonId) ([]*shared.Series, error) {
-	if data, ok := f.data[id]; ok {
-		return data, nil
-	}
-
-	return nil, errors.New("data source not found")
-}
-
 func (f InMemoryPersistence) AddDataPointValues(ctx context.Context, values []*shared.IdSeries) error {
 	for _, value := range values {
-		err := f.AddDataPointValue(ctx, value.Id, shared.NewSeries(value.Value, value.Timestamp))
+		err := f.AddDataPointValue(ctx, value.Id, &shared.Series{
+			Value:     value.Value,
+			Timestamp: value.Timestamp,
+		})
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (f InMemoryPersistence) GetPointValues(ctx context.Context, id shared.CommonId, begin time.Time, end time.Time) ([]*shared.Series, error) {
+	result := make([]*shared.Series, 0)
+
+	//Filter by period
+	for _, value := range f.data[id] {
+		if value.Timestamp.After(begin) && value.Timestamp.Before(end) {
+			result = append(result, value)
+		}
+	}
+
+	return result, nil
 }
 
 func NewInMemoryPersistence() *InMemoryPersistence {

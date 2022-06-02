@@ -16,17 +16,21 @@ import (
 )
 
 type HttpRequestDataPoint struct {
-	*DataPointCommon
+	common        *DataPointCommon
 	rowIdentifier string
 	dateFormat    string
 }
 
+func NewHttpRequestDataPoint(common *DataPointCommon, rowIdentifier string, dateFormat string) *HttpRequestDataPoint {
+	return &HttpRequestDataPoint{common: common, rowIdentifier: rowIdentifier, dateFormat: dateFormat}
+}
+
 func (r HttpRequestDataPoint) Id() shared.CommonId {
-	return r.id
+	return r.common.Id
 }
 
 func (r HttpRequestDataPoint) Name() string {
-	return r.name
+	return r.common.Name
 }
 
 type HttpRequestWorker struct {
@@ -47,8 +51,8 @@ type HttpRequestWorker struct {
 	dataSourceId shared.CommonId
 }
 
-func NewHttpRequestWorker(dataSourceId shared.CommonId) *HttpRequestWorker {
-	return &HttpRequestWorker{dataSourceId: dataSourceId}
+func (c *HttpRequestWorker) SetDataSourceId(dataSourceId shared.CommonId) {
+	c.dataSourceId = dataSourceId
 }
 
 func (c *HttpRequestWorker) DataSourceId() shared.CommonId {
@@ -131,12 +135,12 @@ func (c *HttpRequestWorker) QueryDatabase(ctx context.Context) ([]*shared.IdSeri
 			return nil, err
 		}
 
-		if point, ok := dict["name"]; ok {
+		if point, ok := dict["Name"]; ok {
 			timestamp, err := time.Parse(point.dateFormat, data["timestamp"])
 			if err != nil {
 				return nil, err
 			}
-			result = append(result, shared.NewIdSeries(point.id, value, timestamp))
+			result = append(result, shared.NewIdSeries(point.Id(), value, timestamp))
 		}
 	}
 

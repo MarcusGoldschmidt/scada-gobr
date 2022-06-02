@@ -44,7 +44,13 @@ func (s *Scadagobr) setRouters() {
 
 	// Users
 	s.get("/api/v1/user", s.jwtMiddleware(GetUsersHandler))
+	s.get("/api/v1/user/{id}", s.jwtMiddleware(GetUserHandler))
 	s.post("/api/v1/user", s.jwtMiddleware(CreateUserHandler))
 	s.put("/api/v1/user/{id}", s.jwtMiddleware(UpdateUserHandler))
 	s.delete("/api/v1/user/{id}", s.jwtMiddleware(DeleteUserHandler))
+
+	// Sql
+	s.get("/api/v1/sql/drivers", s.jwtMiddleware(GetDriversHandler))
+
+	// DataSources
 }

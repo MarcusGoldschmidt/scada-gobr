@@ -1,16 +1,19 @@
 package models
 
 import (
-	"github.com/google/uuid"
-	"gorm.io/gorm"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"time"
 )
 
 type DataSource struct {
-	gorm.Model
-	ID        uuid.UUID `gorm:"type:uuid"`
-	Name      string
-	Data      []byte
+	ID   shared.CommonId `gorm:"type:uuid"`
+	Name string
+	Data []byte `gorm:"type:jsonb"`
+
+	Type DataSourceType
+
+	DataPoints []*DataPoint `gorm:"foreignKey:DataSourceId"`
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

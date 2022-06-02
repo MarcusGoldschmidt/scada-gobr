@@ -9,16 +9,20 @@ import (
 )
 
 type SqlDataPoint struct {
-	*DataPointCommon
+	common        *DataPointCommon
 	rowIdentifier string
 }
 
+func NewSqlDataPoint(common *DataPointCommon, rowIdentifier string) *SqlDataPoint {
+	return &SqlDataPoint{common: common, rowIdentifier: rowIdentifier}
+}
+
 func (r SqlDataPoint) Id() shared.CommonId {
-	return r.id
+	return r.common.Id
 }
 
 func (r SqlDataPoint) Name() string {
-	return r.name
+	return r.common.Name
 }
 
 type SqlWorker struct {
@@ -33,6 +37,11 @@ type SqlWorker struct {
 	dataSourceId shared.CommonId
 
 	Persistence persistence.DataPointPersistence
+}
+
+func (c *SqlWorker) Work(ctx context.Context, errorChan chan<- error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func NewSqlWorker(period time.Duration, dataPoints []*SqlDataPoint, driver string, query string, connectionString string, dataSourceId shared.CommonId, persistence persistence.DataPointPersistence) *SqlWorker {
@@ -80,10 +89,10 @@ func (c *SqlWorker) Run(ctx context.Context, errorChan chan<- error) {
 
 func (c *SqlWorker) QueryDatabase(ctx context.Context, db *sql.DB) ([]*shared.IdSeries, error) {
 
-	dict := make(map[string]*shared.CommonId)
+	dict := make(map[string]shared.CommonId)
 
 	for _, point := range c.DataPoints {
-		dict[point.rowIdentifier] = &point.id
+		dict[point.rowIdentifier] = point.Id()
 	}
 
 	rows, err := db.QueryContext(ctx, c.Query)
@@ -105,7 +114,7 @@ func (c *SqlWorker) QueryDatabase(ctx context.Context, db *sql.DB) ([]*shared.Id
 		}
 
 		if id, ok := dict[identifier]; ok {
-			result = append(result, shared.NewIdSeries(*id, value, timestamp))
+			result = append(result, shared.NewIdSeries(id, value, timestamp))
 		}
 	}
 

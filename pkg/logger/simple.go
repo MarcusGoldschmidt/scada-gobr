@@ -13,7 +13,6 @@ type SimpleLogger struct {
 
 // NewSimpleLogger ...
 func NewSimpleLogger(name string, out io.Writer) Logger {
-
 	logger := log.New()
 
 	logger.SetFormatter(&log.TextFormatter{
@@ -22,7 +21,7 @@ func NewSimpleLogger(name string, out io.Writer) Logger {
 
 	return &SimpleLogger{
 		Logger:   logger,
-		LogLevel: logLevelFromEnvironment(),
+		LogLevel: LogLevelFromEnvironment(),
 	}
 }
 
@@ -37,27 +36,27 @@ func NewSimpleLoggerWithLevel(name string, out io.Writer, level LogLevel) Logger
 // Errorf ...
 func (l *SimpleLogger) Errorf(f string, v ...interface{}) {
 	if l.LogLevel <= LogError {
-		l.Logger.Printf("ERROR: "+f, v...)
+		l.Logger.Errorf(f, v...)
 	}
 }
 
 // Warningf ...
 func (l *SimpleLogger) Warningf(f string, v ...interface{}) {
 	if l.LogLevel <= LogWarn {
-		l.Logger.Printf("WARNING: "+f, v...)
+		l.Logger.Warningf(f, v...)
 	}
 }
 
 // Infof ...
 func (l *SimpleLogger) Infof(f string, v ...interface{}) {
 	if l.LogLevel <= LogInfo {
-		l.Logger.Printf("INFO: "+f, v...)
+		l.Logger.Infof(f, v...)
 	}
 }
 
 // Debugf ...
 func (l *SimpleLogger) Debugf(f string, v ...interface{}) {
 	if l.LogLevel <= LogDebug {
-		l.Logger.Printf("DEBUG: "+f, v...)
+		l.Logger.Debugf(f, v...)
 	}
 }

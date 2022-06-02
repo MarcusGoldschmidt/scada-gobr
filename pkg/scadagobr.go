@@ -7,6 +7,7 @@ import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/runtime"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/server"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
@@ -19,11 +20,17 @@ type Scadagobr struct {
 	Db             *gorm.DB
 	Option         *ScadagobrOptions
 
-	UserPersistence persistence.UserPersistence
-	JwtHandler      *auth.JwtHandler
+	// Persistence
+	userPersistence       persistence.UserPersistence
+	dataPointPersistence  persistence.DataPointPersistence
+	dataSourcePersistence persistence.DataSourcePersistence
+
+	JwtHandler *auth.JwtHandler
 
 	server *http.Server
 	router *mux.Router
+
+	internalRoute *server.Router
 }
 
 func (s *Scadagobr) Setup() error {

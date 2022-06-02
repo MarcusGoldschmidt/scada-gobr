@@ -24,7 +24,7 @@ type Logger interface {
 	Debugf(string, ...interface{})
 }
 
-func logLevelFromEnvironment() LogLevel {
+func LogLevelFromEnvironment() LogLevel {
 	logLevel, _ := os.LookupEnv("LOG_LEVEL")
 	switch strings.ToLower(logLevel) {
 	case "error":

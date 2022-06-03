@@ -2,6 +2,7 @@ package gorm
 
 import (
 	"context"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"gorm.io/gorm"
@@ -9,11 +10,12 @@ import (
 )
 
 type DataPointPersistenceGormImpl struct {
-	db *gorm.DB
+	db         *gorm.DB
+	hubManager events.HubManager
 }
 
-func NewDataPointPersistenceGormImpl(db *gorm.DB) *DataPointPersistenceGormImpl {
-	return &DataPointPersistenceGormImpl{db: db}
+func NewDataPointPersistenceGormImpl(db *gorm.DB, hubManager events.HubManager) *DataPointPersistenceGormImpl {
+	return &DataPointPersistenceGormImpl{db: db, hubManager: hubManager}
 }
 
 func (d DataPointPersistenceGormImpl) DeleteDataPointValueByPeriod(ctx context.Context, id shared.CommonId, begin time.Time, end time.Time) error {
@@ -51,12 +53,28 @@ func (d DataPointPersistenceGormImpl) AddDataPointValue(ctx context.Context, id 
 
 	dataSeries := models.NewDataSeries(value.Timestamp, value.Value, id)
 
-	return db.Create(dataSeries).Error
+	err := db.Create(dataSeries).Error
+
+	if err != nil {
+		return err
+	}
+
+	d.sendNotificationSeriesCreated(dataSeries)
+
+	return nil
 }
 
 func (d DataPointPersistenceGormImpl) AddDataPointValues(ctx context.Context, values []*models.DataSeries) error {
 	db := d.db.WithContext(ctx)
-	return db.Create(&values).Error
+	err := db.Create(&values).Error
+
+	if err != nil {
+		return err
+	}
+
+	d.sendNotificationSeriesCreated(values...)
+
+	return nil
 }
 
 func (d DataPointPersistenceGormImpl) GetPointValues(ctx context.Context, id shared.CommonId, begin time.Time, end time.Time) ([]*shared.Series, error) {
@@ -67,4 +85,10 @@ func (d DataPointPersistenceGormImpl) GetPointValues(ctx context.Context, id sha
 	db.Model(&models.DataSeries{}).Where("time < ? AND ? < time ", begin, end).Scan(&values)
 
 	return values, nil
+}
+
+func (d DataPointPersistenceGormImpl) sendNotificationSeriesCreated(series ...*models.DataSeries) {
+	for _, data := range series {
+		d.hubManager.SendMessage(events.DataSeriesInserter+data.DataPointId.String(), data)
+	}
 }

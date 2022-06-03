@@ -26,8 +26,6 @@ func NewGormLogger() *GormLogger {
 		FullTimestamp: true,
 	})
 
-	logger.Level = log.TraceLevel
-
 	return &GormLogger{
 		Logger:                logger,
 		SkipErrRecordNotFound: false,

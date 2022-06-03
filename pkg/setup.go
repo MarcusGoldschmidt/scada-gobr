@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"context"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
 	custonLogger "github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	gorm2 "github.com/MarcusGoldschmidt/scadagobr/pkg/persistence/gorm"
@@ -22,6 +23,7 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 	ctx := context.Background()
 
 	loggerImp := custonLogger.NewSimpleLogger("RUNTIME-MANAGER", os.Stdout)
+	hubManager := events.NewHubManagerImpl(loggerImp)
 
 	db, err := gorm.Open(postgres.Open(opt.PostgresConnectionString), &gorm.Config{
 		Logger: custonLogger.NewGormLogger(),
@@ -36,15 +38,14 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 	}
 
 	// Persistence
-	persistenceImp := gorm2.NewDataPointPersistenceGormImpl(db)
 	dataSourcePersistence := gorm2.NewDataSourcePersistenceGormImpl(db)
-	dataPointPersistence := gorm2.NewDataPointPersistenceGormImpl(db)
+	dataPointPersistence := gorm2.NewDataPointPersistenceGormImpl(db, hubManager)
 	userPersistence := gorm2.NewUserPersistenceImp(db)
 
 	scadaRouter := scadaServer.NewRouter()
 
 	// Runtime manager
-	runtimeManager := runtime.NewRuntimeManager(loggerImp, persistenceImp)
+	runtimeManager := runtime.NewRuntimeManager(loggerImp, dataPointPersistence)
 	runtimeManager.WithTimeProvider(providers.UtcTimeProvider{})
 
 	// Route to http server datasource
@@ -52,13 +53,12 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 	r.Handle("/api/datasource/integration", scadaRouter)
 
 	jwtHandler := SetupJwtHandler(opt, userPersistence)
-	simpleLog := custonLogger.NewSimpleLogger("SCADA", os.Stdout)
 
 	purgeManager := purge.NewManager(dataPointPersistence, dataSourcePersistence, providers.UtcTimeProvider{}, loggerImp, time.Hour)
 
 	scada := &Scadagobr{
 		RuntimeManager:        runtimeManager,
-		Logger:                simpleLog,
+		Logger:                loggerImp,
 		Db:                    db,
 		Option:                opt,
 		router:                r,
@@ -68,6 +68,7 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 		dataPointPersistence:  dataPointPersistence,
 		internalRoute:         scadaRouter,
 		purgeManager:          purgeManager,
+		HubManager:            hubManager,
 	}
 
 	scada.setRouters()

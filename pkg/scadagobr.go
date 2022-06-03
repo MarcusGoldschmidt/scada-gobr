@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/auth"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
@@ -34,6 +35,7 @@ type Scadagobr struct {
 	internalRoute *server.Router
 
 	purgeManager *purge.Manager
+	HubManager   events.HubManager
 
 	// Created after the server is started
 	shutdownContext func()
@@ -66,6 +68,8 @@ func (s *Scadagobr) Run(ctx context.Context) error {
 	ctx, s.shutdownContext = context.WithCancel(ctx)
 
 	go s.purgeManager.Work(ctx)
+
+	s.HubManager.Start(ctx)
 
 	s.RuntimeManager.RunAll(ctx)
 

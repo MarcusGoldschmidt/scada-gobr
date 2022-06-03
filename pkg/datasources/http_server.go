@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/server"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
@@ -85,10 +86,10 @@ func (c *HttpServerWorker) Run(ctx context.Context, errorChan chan<- error) {
 				dict[point.rowIdentifier] = point.Id()
 			}
 
-			series := make([]*shared.IdSeries, 0)
+			series := make([]*models.DataSeries, 0)
 			for _, d := range data {
 				if id, ok := dict[d.Name]; ok {
-					series = append(series, shared.NewIdSeries(id, d.Value, d.Timestamp))
+					series = append(series, models.NewDataSeries(d.Timestamp, d.Value, id))
 				}
 			}
 

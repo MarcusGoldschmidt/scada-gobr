@@ -14,14 +14,15 @@ const (
 )
 
 type DataPoint struct {
-	Id shared.CommonId `gorm:"type:uuid"`
-
-	DataSourceId shared.CommonId
-
-	Name       string
-	IsEnable   bool
-	Unit       string
-	PurgeAfter *time.Duration
-	Type       DataSourceType
-	Data       []byte `gorm:"type:jsonb"`
+	Id           shared.CommonId `gorm:"type:uuid"`
+	DataSourceId shared.CommonId `json:"dataSourceId"`
+	Name         string          `json:"name"`
+	IsEnable     bool            `json:"isEnable"`
+	Unit         string          `json:"unit"`
+	PurgeAfter   *time.Duration  `json:"purgeAfter"`
+	Type         DataSourceType  `json:"type"`
+	Data         []byte          `json:"-" gorm:"type:jsonb"`
+	TypeData     map[string]any  `json:"data" gorm:"-"`
+	CreatedAt    time.Time       `json:"createdAt"`
+	UpdatedAt    time.Time       `json:"updatedAt"`
 }

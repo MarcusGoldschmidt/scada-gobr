@@ -8,8 +8,8 @@ func AutoMigration(db *gorm.DB) error {
 		return err
 	}
 
-	db.Exec(`SELECT create_hypertable('data_series', 'time_stamp');`)
-	db.Exec(`CREATE INDEX IF NOT EXISTS ix_data_series_datapointid_time_stamp ON data_series (data_point_id, time_stamp DESC);
+	db.Exec(`SELECT create_hypertable('data_series', 'timestamp');`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS ix_data_series_datapointid_timestamp ON data_series (data_point_id, timestamp DESC);
 
 `)
 	return nil

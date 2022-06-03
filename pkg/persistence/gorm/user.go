@@ -12,6 +12,10 @@ type UserPersistenceGormImpl struct {
 	db *gorm.DB
 }
 
+func NewUserPersistenceGormImpl(db *gorm.DB) *UserPersistenceGormImpl {
+	return &UserPersistenceGormImpl{db: db}
+}
+
 func (u UserPersistenceGormImpl) GetUsers(ctx context.Context, request *shared.PaginationRequest) ([]*models.User, error) {
 	db := u.db.WithContext(ctx)
 

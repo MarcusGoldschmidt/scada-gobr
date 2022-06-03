@@ -16,16 +16,6 @@ type Series struct {
 	Timestamp time.Time
 }
 
-type IdSeries struct {
-	Id        CommonId
-	Value     float64
-	Timestamp time.Time
-}
-
-func NewIdSeries(id CommonId, value float64, timestamp time.Time) *IdSeries {
-	return &IdSeries{Id: id, Value: value, Timestamp: timestamp}
-}
-
 func NewSeries(value float64, timestamp time.Time) *Series {
 	return &Series{Value: value, Timestamp: timestamp}
 }

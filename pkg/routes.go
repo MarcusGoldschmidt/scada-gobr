@@ -53,4 +53,16 @@ func (s *Scadagobr) setRouters() {
 	s.get("/api/v1/sql/drivers", s.jwtMiddleware(GetDriversHandler))
 
 	// DataSources
+	s.get("/api/v1/datasources/types", s.jwtMiddleware(GetDataSourceTypesHandler))
+	s.get("/api/v1/datasources/runtime", s.jwtMiddleware(GetDataSourcesRuntime))
+	s.get("/api/v1/datasources", s.jwtMiddleware(GetDataSourcesHandler))
+	s.post("/api/v1/datasources", s.jwtMiddleware(CreateDataSourceHandler))
+	s.put("/api/v1/datasources/{id}", s.jwtMiddleware(EditDataSourceHandler))
+
+	// DataPoints
+	s.get("/api/v1/datasources/{id}/datapoints", s.jwtMiddleware(GetDataPointsHandler))
+	s.post("/api/v1/datasources/{id}/datapoints", s.jwtMiddleware(CreateDataPointHandler))
+	s.put("/api/v1/datasources/{id}/datapoints/{dataPointId}", s.jwtMiddleware(EditDataPointHandler))
+	s.delete("/api/v1/datasources/{id}/datapoints/{dataPointId}", s.jwtMiddleware(DeleteDataPointHandler))
+
 }

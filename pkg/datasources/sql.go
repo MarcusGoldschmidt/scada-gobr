@@ -3,6 +3,7 @@ package datasources
 import (
 	"context"
 	"database/sql"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"time"
@@ -87,7 +88,7 @@ func (c *SqlWorker) Run(ctx context.Context, errorChan chan<- error) {
 	}
 }
 
-func (c *SqlWorker) QueryDatabase(ctx context.Context, db *sql.DB) ([]*shared.IdSeries, error) {
+func (c *SqlWorker) QueryDatabase(ctx context.Context, db *sql.DB) ([]*models.DataSeries, error) {
 
 	dict := make(map[string]shared.CommonId)
 
@@ -102,7 +103,7 @@ func (c *SqlWorker) QueryDatabase(ctx context.Context, db *sql.DB) ([]*shared.Id
 	}
 	defer rows.Close()
 
-	result := make([]*shared.IdSeries, 0)
+	result := make([]*models.DataSeries, 0)
 
 	for rows.Next() {
 		var identifier string
@@ -114,7 +115,7 @@ func (c *SqlWorker) QueryDatabase(ctx context.Context, db *sql.DB) ([]*shared.Id
 		}
 
 		if id, ok := dict[identifier]; ok {
-			result = append(result, shared.NewIdSeries(id, value, timestamp))
+			result = append(result, models.NewDataSeries(timestamp, value, id))
 		}
 	}
 

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/go-playground/validator/v10"
 	"io/ioutil"
@@ -28,4 +29,8 @@ func ValidateFromBody[T any](r *http.Request) (*T, error) {
 	}
 
 	return &response, nil
+}
+
+func ValidateStruct(ctx context.Context, data any) error {
+	return Validate.StructCtx(ctx, data)
 }

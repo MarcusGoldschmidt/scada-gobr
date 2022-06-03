@@ -13,46 +13,44 @@ import (
 //go:embed public
 var spa embed.FS
 
-func SetupSpa(r *mux.Router, devMode bool) error {
-	if !devMode {
-		files, err := fs.Sub(spa, "public")
-		if err != nil {
-			return err
+func SetupSpa(r *mux.Router) error {
+	files, err := fs.Sub(spa, "public")
+	if err != nil {
+		return err
+	}
+
+	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		path := r.URL.Path
+
+		if path[0] == '/' {
+			path = path[1:]
 		}
 
-		r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(path, "api") {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 
-			path := r.URL.Path
+		_, err := files.Open(path)
 
-			if path[0] == '/' {
-				path = path[1:]
-			}
+		if err != nil {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusOK)
 
-			if strings.HasPrefix(path, "api") {
-				w.WriteHeader(http.StatusNotFound)
-				return
-			}
+			file, _ := files.Open("index.html")
 
-			_, err := files.Open(path)
+			response, err := io.ReadAll(file)
 
+			_, err = w.Write(response)
 			if err != nil {
-				w.Header().Set("Content-Type", "text/html; charset=utf-8")
-				w.WriteHeader(http.StatusOK)
-
-				file, _ := files.Open("index.html")
-
-				response, err := io.ReadAll(file)
-
-				_, err = w.Write(response)
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-				}
-				return
+				w.WriteHeader(http.StatusInternalServerError)
 			}
+			return
+		}
 
-			http.FileServer(http.FS(files)).ServeHTTP(w, r)
-		})
-	}
+		http.FileServer(http.FS(files)).ServeHTTP(w, r)
+	})
 
 	return nil
 }

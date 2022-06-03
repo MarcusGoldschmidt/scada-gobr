@@ -2,17 +2,18 @@ package in_memory
 
 import (
 	"context"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"time"
 )
 
 type InMemoryPersistence struct {
-	data map[shared.CommonId][]*shared.Series
+	data map[shared.CommonId][]*models.DataSeries
 }
 
-func (f InMemoryPersistence) AddDataPointValues(ctx context.Context, values []*shared.IdSeries) error {
+func (f InMemoryPersistence) AddDataPointValues(ctx context.Context, values []*models.DataSeries) error {
 	for _, value := range values {
-		err := f.AddDataPointValue(ctx, value.Id, &shared.Series{
+		err := f.AddDataPointValue(ctx, value.DataPointId, &shared.Series{
 			Value:     value.Value,
 			Timestamp: value.Timestamp,
 		})
@@ -29,7 +30,7 @@ func (f InMemoryPersistence) GetPointValues(ctx context.Context, id shared.Commo
 	//Filter by period
 	for _, value := range f.data[id] {
 		if value.Timestamp.After(begin) && value.Timestamp.Before(end) {
-			result = append(result, value)
+			result = append(result, shared.NewSeries(value.Value, value.Timestamp))
 		}
 	}
 
@@ -37,14 +38,16 @@ func (f InMemoryPersistence) GetPointValues(ctx context.Context, id shared.Commo
 }
 
 func NewInMemoryPersistence() *InMemoryPersistence {
-	return &InMemoryPersistence{data: make(map[shared.CommonId][]*shared.Series)}
+	return &InMemoryPersistence{data: make(map[shared.CommonId][]*models.DataSeries)}
 }
 
 func (f InMemoryPersistence) AddDataPointValue(ctx context.Context, id shared.CommonId, value *shared.Series) error {
+	series := models.NewDataSeries(value.Timestamp, value.Value, id)
+
 	if f.data[id] == nil {
-		f.data[id] = []*shared.Series{value}
+		f.data[id] = []*models.DataSeries{series}
 	} else {
-		f.data[id] = append(f.data[id], value)
+		f.data[id] = append(f.data[id], series)
 	}
 	return nil
 }

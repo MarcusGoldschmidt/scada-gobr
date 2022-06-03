@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"io/ioutil"
@@ -79,7 +80,7 @@ func (c *HttpRequestWorker) Run(ctx context.Context, errorChan chan<- error) {
 	}
 }
 
-func (c *HttpRequestWorker) QueryDatabase(ctx context.Context) ([]*shared.IdSeries, error) {
+func (c *HttpRequestWorker) QueryDatabase(ctx context.Context) ([]*models.DataSeries, error) {
 	dict := make(map[string]*HttpRequestDataPoint)
 
 	for _, point := range c.DataPoints {
@@ -126,7 +127,7 @@ func (c *HttpRequestWorker) QueryDatabase(ctx context.Context) ([]*shared.IdSeri
 		}
 	}
 
-	result := make([]*shared.IdSeries, 0)
+	result := make([]*models.DataSeries, 0)
 
 	for _, data := range responseData {
 		value, err := strconv.ParseFloat(data["value"], 64)
@@ -140,7 +141,7 @@ func (c *HttpRequestWorker) QueryDatabase(ctx context.Context) ([]*shared.IdSeri
 			if err != nil {
 				return nil, err
 			}
-			result = append(result, shared.NewIdSeries(point.Id(), value, timestamp))
+			result = append(result, models.NewDataSeries(timestamp, value, point.Id()))
 		}
 	}
 

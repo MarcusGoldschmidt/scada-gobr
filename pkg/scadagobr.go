@@ -6,6 +6,7 @@ import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/purge"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/runtime"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/server"
 	"github.com/google/uuid"
@@ -15,7 +16,7 @@ import (
 )
 
 type Scadagobr struct {
-	RuntimeManager *runtime.RuntimeManager
+	RuntimeManager *runtime.Manager
 	Logger         logger.Logger
 	Db             *gorm.DB
 	Option         *ScadagobrOptions
@@ -31,6 +32,11 @@ type Scadagobr struct {
 	router *mux.Router
 
 	internalRoute *server.Router
+
+	purgeManager *purge.Manager
+
+	// Created after the server is started
+	shutdownContext func()
 }
 
 func (s *Scadagobr) Setup() error {
@@ -57,6 +63,10 @@ func (s *Scadagobr) Setup() error {
 }
 
 func (s *Scadagobr) Run(ctx context.Context) error {
+	ctx, s.shutdownContext = context.WithCancel(ctx)
+
+	go s.purgeManager.Work(ctx)
+
 	s.RuntimeManager.RunAll(ctx)
 
 	s.Logger.Infof("Start HTTP server with address: %s", s.server.Addr)
@@ -72,6 +82,8 @@ func (s *Scadagobr) Run(ctx context.Context) error {
 }
 
 func (s *Scadagobr) Shutdown(ctx context.Context) {
+	s.shutdownContext()
+
 	err := s.server.Shutdown(ctx)
 	if err != nil {
 		return

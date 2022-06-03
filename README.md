@@ -14,6 +14,7 @@ Code released under [the GPL license](https://github.com/SCADA-LTS/Scada-LTS/blo
 
 * Custom dashboard view
 * Realtime Dashboard
+* Realtime data visualization
 * User permission
 * Custom web client changes, like images and text
 * Control runtime manager in the web

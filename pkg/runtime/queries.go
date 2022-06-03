@@ -6,10 +6,10 @@ import (
 )
 
 type DataSourceRuntimeManagerStatus struct {
-	Id     shared.CommonId              `json:"id"`
-	Name   string                       `json:"name"`
-	Status datasources.DataSourceStatus `json:"status"`
-	Error  string                       `json:"error"`
+	Id     shared.CommonId `json:"id"`
+	Name   string          `json:"name"`
+	Status string          `json:"status"`
+	Error  string          `json:"error"`
 }
 
 func newDataSourceRuntimeManagerStatus(manager datasources.DataSourceRuntimeManager) *DataSourceRuntimeManagerStatus {
@@ -22,14 +22,14 @@ func newDataSourceRuntimeManagerStatus(manager datasources.DataSourceRuntimeMana
 	return &DataSourceRuntimeManagerStatus{
 		Id:     manager.Id(),
 		Name:   manager.Name(),
-		Status: manager.Status(),
+		Status: manager.Status().String(),
 		Error:  errorMsg,
 	}
 }
 
-func (r *RuntimeManager) GetAllDataSources() []*DataSourceRuntimeManagerStatus {
+func (r *Manager) GetAllDataSources() []*DataSourceRuntimeManagerStatus {
 
-	response := make([]*DataSourceRuntimeManagerStatus, len(r.dataSources))
+	var response []*DataSourceRuntimeManagerStatus
 
 	for _, manager := range r.dataSources {
 		response = append(response, newDataSourceRuntimeManagerStatus(manager))

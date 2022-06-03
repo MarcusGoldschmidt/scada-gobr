@@ -22,8 +22,8 @@ func main() {
 	dataPoints, workers := ExtractDataPointsAndWorkers(pkg)
 
 	templateParams := map[string]string{
-		"Workers":    ListStruct("Workers", workers),
-		"DataPoints": ListStruct("DataPoints", dataPoints),
+		"Workers":    ListStruct("WorkerTypes", workers),
+		"DataPoints": ListStruct("DataSourceTypes", dataPoints),
 	}
 
 	genPath := filepath.Join(goPackage, "generated_types.go")
@@ -81,7 +81,7 @@ func ExtractDataPointsAndWorkers(pkg *packages.Package) (map[string]*types.Struc
 				obj := pkg.Types.Scope().Lookup(s.Name.Name)
 
 				if structType, ok := obj.(*types.TypeName).Type().Underlying().(*types.Struct); ok {
-					dataPoints[s.Name.Name] = structType
+					dataPoints[strings.TrimSuffix(s.Name.Name, "DataPoint")] = structType
 				}
 
 				return true
@@ -92,7 +92,7 @@ func ExtractDataPointsAndWorkers(pkg *packages.Package) (map[string]*types.Struc
 				obj := pkg.Types.Scope().Lookup(s.Name.Name)
 
 				if structType, ok := obj.(*types.TypeName).Type().Underlying().(*types.Struct); ok {
-					workers[s.Name.Name] = structType
+					workers[strings.TrimSuffix(s.Name.Name, "Worker")] = structType
 				}
 
 				return true

@@ -1,8 +1,8 @@
 <script lang="ts">
     import Table from "../../components/Table.svelte";
     import {ModalCard} from 'svelma'
-    import {axiosJwt} from "../../shared/http/axios";
-    import {PathsV1} from "../../shared/http/request";
+    import {axiosJwt} from "../../shared/net/axios";
+    import {PathsV1} from "../../shared/net/request";
     import {link} from "svelte-routing";
     import {NotificationType, sendNotification} from "../../shared/stores/notifications";
 

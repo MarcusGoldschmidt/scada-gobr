@@ -2,7 +2,7 @@
     import {Field, Input} from 'svelma'
     import * as yup from 'yup';
     import {globalHistory} from "svelte-routing/src/history";
-    import {loginUser} from "../../shared/http/axios";
+    import {loginUser} from "../../shared/net/axios";
     import {getErrorsFromSchema, inputError} from "../../shared/utils";
     import {navigate} from "svelte-routing";
     import {authStore} from "../../shared/stores/user";

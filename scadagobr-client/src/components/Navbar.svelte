@@ -18,19 +18,19 @@
         </div>
         <div id="navMenu" class="navbar-menu">
             <div class="navbar-start">
-                <a class="navbar-item" href="#" use:link>
+                <a class="navbar-item" href="/watch-list" use:link>
                     Watch list
                 </a>
-                <a class="navbar-item" href="#" use:link>
+                <a class="navbar-item" href="/views" use:link>
                     Graphical views
                 </a>
-                <a class="navbar-item" href="#" use:link>
+                <a class="navbar-item" href="/datasources" use:link>
                     Data sources
                 </a>
                 <a class="navbar-item" href="/users" use:link>
                     Users
                 </a>
-                <a class="navbar-item" href="#" use:link>
+                <a class="navbar-item" href="/reports" use:link>
                     Reports
                 </a>
             </div>

@@ -13,3 +13,7 @@ export const Request = {
     V1: PathsV1,
 } as const
 
+export enum PathsWsV1 {
+    DataPoint= "/api/v1/datapoints/ws/",
+}
+

@@ -1,5 +1,6 @@
 export interface Env {
-    API_BASE_URL: string
+    API_BASE_URL: string,
+    WS_BASE_URL: string,
 }
 
 // @ts-ignore

@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.2",
+    "@carbon/charts-svelte": "^1.0.4",
     "@fortawesome/fontawesome-free": "^6.1.1",
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.0.0",
@@ -37,7 +38,7 @@
     "font-awesome": "^4.7.0",
     "node-sass": "^7.0.1",
     "postcss": "^8.4.14",
-    "rollup": "^2.3.4",
+    "rollup": "^2.75.5",
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-css-only": "^3.1.0",
     "rollup-plugin-livereload": "^2.0.0",

@@ -43,8 +43,11 @@ export default {
     },
     plugins: [
         replace({
+            preventAssignment: true,
+            'process.env.NODE_ENV': JSON.stringify('production'),
             ROLLUP_REPLACE_ENVIROMENT: JSON.stringify({
-                API_BASE_URL: process.env.API_BASE_URL || 'http://localhost:11139'
+                API_BASE_URL: process.env.API_BASE_URL || 'http://localhost:11139',
+                WS_BASE_URL: process.env.WS_BASE_URL || 'ws://localhost:11139'
             })
         }),
         svelte({

@@ -4,8 +4,8 @@
     import {getErrorsFromSchema, inputError} from "../../shared/utils";
     import {navigate} from "svelte-routing";
     import FieldHorizontal from "../../components/FieldHorizontal.svelte";
-    import {axiosJwt} from "../../shared/http/axios";
-    import {PathsV1} from "../../shared/http/request";
+    import {axiosJwt} from "../../shared/net/axios";
+    import {PathsV1} from "../../shared/net/request";
     import {onMount} from "svelte";
     import {sendNotification} from "../../shared/stores/notifications";
 

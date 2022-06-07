@@ -44,7 +44,7 @@ func (r *Manager) WithOptions(opt ManagerOptions) {
 	r.options = opt
 }
 
-func (r *Manager) AddDataSource(sources ...datasources.DataSourceRuntimeManager) {
+func (r *Manager) AddDataSourceManager(sources ...datasources.DataSourceRuntimeManager) {
 	for _, source := range sources {
 		r.dataSources[source.Id()] = source
 	}
@@ -76,7 +76,7 @@ func (r *Manager) RunAll(ctx context.Context) {
 func (r *Manager) UpdateDataSource(ctx context.Context, ds datasources.DataSourceRuntimeManager) {
 	_ = r.StopDataSource(ctx, ds.Id())
 	r.RemoveDataSource(ds.Id())
-	r.AddDataSource(ds)
+	r.AddDataSourceManager(ds)
 	r.Run(ctx, ds.Id())
 }
 

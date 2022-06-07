@@ -2,10 +2,11 @@ package runtime
 
 import (
 	"context"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/datasources"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence/in_memory"
+	"github.com/google/uuid"
 	"os"
-	"scadagobr/pkg/datasources"
-	"scadagobr/pkg/logger"
-	"scadagobr/pkg/persistence"
 	"testing"
 	"time"
 )
@@ -13,62 +14,39 @@ import (
 func TestSimpleRuntime(t *testing.T) {
 	ctx := context.Background()
 
-	rt := NewRuntimeManager(logger.NewSimpleLogger("teste", os.Stdout), &persistence.InMemoryPersistence{})
+	rt := NewRuntimeManager(logger.NewSimpleLogger("teste", os.Stdout), in_memory.NewInMemoryPersistence())
+
+	testLogger := logger.NewTestLogger(t)
 
 	sum := 0
 
-	dataSource := datasources.NewCallbackDataSource(func() error {
+	worker := datasources.NewCallbackWorker(func() error {
 		sum = sum + 1
 		t.Logf("Pass %d seconds", sum)
 		return nil
-	}, true)
+	}, time.Second)
 
-	rt.AddDataSource(dataSource)
+	dsManager := datasources.NewDataSourceRuntimeManagerCommon(uuid.New(), "Teste", testLogger)
+	dsManager.WithWorker(worker)
 
-	rt.Run(ctx, dataSource.Id())
+	rt.AddDataSourceManager(dsManager)
+
+	rt.RunAll(ctx)
+
+	<-time.After(5 * time.Second)
+
+	rt.StopAll(ctx)
 
 	<-time.After(1 * time.Second)
-
-	rt.StopAll()
-
-	if len(rt.dataSourcesRuntimeControl) > 0 {
-		t.Errorf("Expected to shutdown all data sources")
-	}
-}
-
-func TestSimpleRuntimeSum(t *testing.T) {
-	rt := NewRuntimeManager(logger.NewSimpleLogger("teste", os.Stdout), &persistence.InMemoryPersistence{})
-
-	data := make(chan int)
-
-	dataSource := datasources.NewCallbackDataSource(func() error {
-		data <- 1
-		return nil
-	}, true)
-
-	rt.AddDataSource(dataSource)
-
-	ctx := context.Background()
-
-	rt.Run(ctx, dataSource.Id())
-
-	sum := 0
-
-	go func() {
-		<-time.After(5 * time.Second)
-		rt.StopAll()
-		close(data)
-	}()
-
-	for range data {
-		sum = sum + 1
-	}
 
 	if sum == 5 {
 		t.Errorf("Falied sum, got %d", sum)
 	}
 
-	if len(rt.dataSourcesRuntimeControl) != 0 {
-		t.Errorf("Do not stop all datasources, len: %d", len(rt.dataSourcesRuntimeControl))
+	for _, manager := range rt.dataSources {
+		if manager.Status() != datasources.Stopped {
+			t.Errorf("expected to shutdown all data sources")
+		}
 	}
+
 }

@@ -15,9 +15,9 @@ type HubClient interface {
 }
 
 type HubManager interface {
-	Start(ctx context.Context)
+	ShutDown(ctx context.Context)
 	SendMessage(topic string, data any)
-	AddClient(topic string, client HubClient)
+	AddClient(ctx context.Context, topic string, client HubClient)
 	RemoveClient(topic string, client HubClient)
 	CreateTopic(topicName string)
 }
@@ -34,13 +34,12 @@ func NewHubManagerImpl(logger logger.Logger) *HubManagerImpl {
 	}
 }
 
-// Start starts the hub and can be stopped by cancel the contex
-func (hm *HubManagerImpl) Start(ctx context.Context) {
-	for topic, hub := range hm.topics {
-		hm.logger.Infof("Stating hub for topic %s", topic)
-		go hub.Run(ctx)
-		hm.logger.Infof("Started hub for topic %s", topic)
+//ShutDown and remove all clients
+func (hm *HubManagerImpl) ShutDown(ctx context.Context) {
+	for _, hub := range hm.topics {
+		hub.closed <- true
 	}
+	hm.topics = map[string]*Hub{}
 }
 
 func (hm *HubManagerImpl) SendMessage(topic string, data any) {
@@ -52,8 +51,9 @@ func (hm *HubManagerImpl) SendMessage(topic string, data any) {
 	}
 }
 
-func (hm *HubManagerImpl) AddClient(topic string, client HubClient) {
+func (hm *HubManagerImpl) AddClient(ctx context.Context, topic string, client HubClient) {
 	hm.CreateTopic(topic)
+	go hm.topics[topic].Run(ctx)
 	hm.topics[topic].register <- client
 }
 
@@ -84,6 +84,8 @@ type Hub struct {
 	unregister chan HubClient
 
 	logger logger.Logger
+
+	closed chan bool
 }
 
 func NewHub(logger logger.Logger, bufferSize ...int) *Hub {
@@ -106,6 +108,8 @@ func NewHub(logger logger.Logger, bufferSize ...int) *Hub {
 func (h *Hub) Run(ctx context.Context) {
 	for {
 		select {
+		case <-h.closed:
+			return
 		case <-ctx.Done():
 			return
 		case client := <-h.register:

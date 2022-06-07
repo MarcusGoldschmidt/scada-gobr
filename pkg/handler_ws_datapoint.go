@@ -25,7 +25,7 @@ func GetWsDataPoint(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 
 	defer conn.Close()
 	client := wshandler.NewDataPointHubClient(dataPointId, conn)
-	s.HubManager.AddClient(events.DataSeriesInserter+dataPointId.String(), client)
+	s.HubManager.AddClient(ctx, events.DataSeriesInserter+dataPointId.String(), client)
 	defer s.HubManager.RemoveClient(events.DataSeriesInserter+dataPointId.String(), client)
 
 	<-ctx.Done()

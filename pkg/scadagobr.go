@@ -69,8 +69,6 @@ func (s *Scadagobr) Run(ctx context.Context) error {
 
 	go s.purgeManager.Work(ctx)
 
-	s.HubManager.Start(ctx)
-
 	s.RuntimeManager.RunAll(ctx)
 
 	s.Logger.Infof("Start HTTP server with address: %s", s.server.Addr)
@@ -87,6 +85,8 @@ func (s *Scadagobr) Run(ctx context.Context) error {
 
 func (s *Scadagobr) Shutdown(ctx context.Context) {
 	s.shutdownContext()
+
+	s.HubManager.ShutDown(ctx)
 
 	err := s.server.Shutdown(ctx)
 	if err != nil {

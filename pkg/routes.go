@@ -66,5 +66,5 @@ func (s *Scadagobr) setRouters() {
 	s.delete("/api/v1/datasources/{id}/datapoints/{dataPointId}", s.jwtMiddleware(DeleteDataPointHandler))
 
 	// Websocket
-	s.get("/api/v1/websocket/{id}", s.jwtMiddleware(GetWsDataPoint))
+	s.get("/api/v1/datapoints/ws/{id}", GetWsDataPoint)
 }

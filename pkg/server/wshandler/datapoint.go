@@ -3,6 +3,7 @@ package wshandler
 import (
 	"context"
 	"errors"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"github.com/gorilla/websocket"
 )
@@ -17,11 +18,12 @@ func NewDataPointHubClient(dataPointId shared.CommonId, conn *websocket.Conn) *D
 }
 
 func (d *DataPointHubClient) Execute(ctx context.Context, message any) error {
-	if series, ok := message.(shared.Series); ok {
+	if series, ok := message.(*models.DataSeries); ok {
 		err := d.conn.WriteJSON(series)
 		if err != nil {
 			return err
 		}
+		return nil
 	}
 
 	return errors.New("not a series")

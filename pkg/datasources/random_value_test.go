@@ -23,6 +23,8 @@ func TestSimpleRuntime(t *testing.T) {
 
 	worker := NewRandomValueWorker(shared.NewCommonId(), 1*time.Second, []*RandomValueDataPoint{dataPoint}, memoryPersistence)
 
+	beforeRun := time.Now()
+
 	common.WithWorker(worker)
 	err := common.Run(ctx)
 	if err != nil {
@@ -36,7 +38,7 @@ func TestSimpleRuntime(t *testing.T) {
 
 	<-time.After(2 * time.Second)
 
-	values, err := memoryPersistence.GetPointValues(worker.dataSourceId)
+	values, err := memoryPersistence.GetPointValues(ctx, worker.dataSourceId, beforeRun, time.Now())
 	if err != nil {
 		t.Error(err)
 	}

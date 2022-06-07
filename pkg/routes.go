@@ -43,28 +43,35 @@ func (s *Scadagobr) setRouters() {
 	s.get("/api/v1/auth/who-am-i", s.jwtMiddleware(WhoAmIHandler))
 
 	// Users
-	s.get("/api/v1/user", s.jwtMiddleware(GetUsersHandler))
-	s.get("/api/v1/user/{id}", s.jwtMiddleware(GetUserHandler))
-	s.post("/api/v1/user", s.jwtMiddleware(CreateUserHandler))
-	s.put("/api/v1/user/{id}", s.jwtMiddleware(UpdateUserHandler))
-	s.delete("/api/v1/user/{id}", s.jwtMiddleware(DeleteUserHandler))
+	s.get("/api/v1/user", s.authAndIsAdminMiddleware(GetUsersHandler))
+	s.get("/api/v1/user/{id}", s.authAndIsAdminMiddleware(GetUserHandler))
+	s.post("/api/v1/user", s.authAndIsAdminMiddleware(CreateUserHandler))
+	s.put("/api/v1/user/{id}", s.authAndIsAdminMiddleware(UpdateUserHandler))
+	s.delete("/api/v1/user/{id}", s.authAndIsAdminMiddleware(DeleteUserHandler))
 
 	// Sql
-	s.get("/api/v1/sql/drivers", s.jwtMiddleware(GetDriversHandler))
+	s.get("/api/v1/sql/drivers", s.authAndIsAdminMiddleware(GetDriversHandler))
 
 	// DataSources
-	s.get("/api/v1/datasources/types", s.jwtMiddleware(GetDataSourceTypesHandler))
-	s.get("/api/v1/datasources/runtime", s.jwtMiddleware(GetDataSourcesRuntime))
-	s.get("/api/v1/datasources", s.jwtMiddleware(GetDataSourcesHandler))
-	s.post("/api/v1/datasources", s.jwtMiddleware(CreateDataSourceHandler))
-	s.put("/api/v1/datasources/{id}", s.jwtMiddleware(EditDataSourceHandler))
+	s.get("/api/v1/datasource/types", s.authAndIsAdminMiddleware(GetDataSourceTypesHandler))
+	s.get("/api/v1/datasource/runtime", s.authAndIsAdminMiddleware(GetDataSourcesRuntime))
+	s.get("/api/v1/datasource", s.authAndIsAdminMiddleware(GetDataSourcesHandler))
+	s.post("/api/v1/datasource", s.authAndIsAdminMiddleware(CreateDataSourceHandler))
+	s.put("/api/v1/datasource/{id}", s.authAndIsAdminMiddleware(EditDataSourceHandler))
 
 	// DataPoints
-	s.get("/api/v1/datasources/{id}/datapoints", s.jwtMiddleware(GetDataPointsHandler))
-	s.post("/api/v1/datasources/{id}/datapoints", s.jwtMiddleware(CreateDataPointHandler))
-	s.put("/api/v1/datasources/{id}/datapoints/{dataPointId}", s.jwtMiddleware(EditDataPointHandler))
-	s.delete("/api/v1/datasources/{id}/datapoints/{dataPointId}", s.jwtMiddleware(DeleteDataPointHandler))
+	s.get("/api/v1/datasource/{id}/datapoint", s.authAndIsAdminMiddleware(GetDataPointsHandler))
+	s.post("/api/v1/datasource/{id}/datapoint", s.authAndIsAdminMiddleware(CreateDataPointHandler))
+	s.put("/api/v1/datasource/{id}/datapoint/{dataPointId}", s.authAndIsAdminMiddleware(EditDataPointHandler))
+	s.delete("/api/v1/datasource/{id}/datapoint/{dataPointId}", s.authAndIsAdminMiddleware(DeleteDataPointHandler))
 
 	// Websocket
-	s.get("/api/v1/datapoints/ws/{id}", GetWsDataPoint)
+	s.get("/api/v1/datapoint/ws/{id}", GetWsDataPoint)
+
+	// Views
+	s.get("/api/v1/view", s.authAndIsAdminMiddleware(GetViewsHandler))
+	s.get("/api/v1/view/{id}", s.authAndIsAdminMiddleware(GetViewByIdHandler))
+	s.post("/api/v1/view", s.authAndIsAdminMiddleware(CreateViewHandler))
+	s.put("/api/v1/view/{id}", s.authAndIsAdminMiddleware(UpdateViewHandler))
+	s.delete("/api/v1/view/{id}", s.authAndIsAdminMiddleware(DeleteViewHandler))
 }

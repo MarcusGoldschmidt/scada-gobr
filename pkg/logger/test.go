@@ -17,6 +17,12 @@ func NewTestLogger(t *testing.T) Logger {
 	}
 }
 
+func (l *TestLogger) Tracef(s string, i ...interface{}) {
+	if l.LogLevel <= LogTrace {
+		l.Logger.Logf("TRACE: "+s, i...)
+	}
+}
+
 // Errorf ...
 func (l *TestLogger) Errorf(f string, v ...interface{}) {
 	if l.LogLevel <= LogError {

@@ -25,17 +25,6 @@ type UserResponse struct {
 func GetUsersHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	claims, err := auth.GetUserFromContext(ctx)
-	if err != nil {
-		s.respondError(w, err)
-		return
-	}
-
-	if !claims.Admin {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
 	request, err := shared.NewPaginationRequest(r)
 	if err != nil {
 		s.respondError(w, err)
@@ -104,17 +93,6 @@ func (r *CreateUserRequest) ToUser() *models.User {
 func CreateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	claims, err := auth.GetUserFromContext(ctx)
-	if err != nil {
-		s.respondError(w, err)
-		return
-	}
-
-	if !claims.Admin {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
 	request, err := server.ValidateFromBody[CreateUserRequest](r)
 	if err != nil {
 		s.respondError(w, err)
@@ -171,11 +149,6 @@ func UpdateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	claims, err := auth.GetUserFromContext(ctx)
 	if err != nil {
 		s.respondError(w, err)
-		return
-	}
-
-	if !claims.Admin {
-		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 

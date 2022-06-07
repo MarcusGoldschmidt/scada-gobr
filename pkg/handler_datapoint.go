@@ -48,17 +48,6 @@ func CreateDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	claims, err := auth.GetUserFromContext(ctx)
-	if err != nil {
-		s.respondError(w, err)
-		return
-	}
-
-	if !claims.Admin {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
 	command, err := server.ValidateFromBody[createDataPoint](r)
 	if err != nil {
 		s.respondError(w, err)

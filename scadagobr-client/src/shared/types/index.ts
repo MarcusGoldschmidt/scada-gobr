@@ -23,3 +23,9 @@ export enum LoadingStatus {
     Error,
     Success,
 }
+
+export enum ViewComponentType {
+    TimeSeries,
+    Graphical,
+    Text,
+}

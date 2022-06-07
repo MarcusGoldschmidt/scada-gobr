@@ -42,3 +42,14 @@ type UserPersistence interface {
 	UpdateUser(context.Context, *models.User) error
 	DeleteUser(context.Context, uuid.UUID) error
 }
+
+type ViewPersistence interface {
+	GetViewById(context.Context, uuid.UUID) (*models.View, error)
+	GetAllViews(context.Context) ([]*models.View, error)
+
+	AttachViewComponents(context.Context, ...*models.ViewComponent) error
+
+	CreateView(context.Context, *models.View) error
+	UpdateView(context.Context, *models.View) error
+	DeleteView(context.Context, uuid.UUID) error
+}

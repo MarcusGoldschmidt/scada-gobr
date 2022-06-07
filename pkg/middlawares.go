@@ -71,3 +71,21 @@ func (s *Scadagobr) adminMiddleware(function RequestHandlerFunction) RequestHand
 		function(scada, w, r)
 	}
 }
+
+func (s *Scadagobr) authAndIsAdminMiddleware(function RequestHandlerFunction) RequestHandlerFunction {
+	return MultipleMiddleware(function, s.jwtMiddleware, s.adminMiddleware)
+}
+
+func MultipleMiddleware(h RequestHandlerFunction, m ...func(RequestHandlerFunction) RequestHandlerFunction) RequestHandlerFunction {
+	if len(m) < 1 {
+		return h
+	}
+
+	wrapped := h
+
+	for i := len(m) - 1; i >= 0; i-- {
+		wrapped = m[i](wrapped)
+	}
+
+	return wrapped
+}

@@ -10,7 +10,8 @@ type LogLevel int8
 
 // Log levels
 const (
-	LogDebug LogLevel = iota
+	LogTrace LogLevel = iota
+	LogDebug
 	LogInfo
 	LogWarn
 	LogError
@@ -22,11 +23,14 @@ type Logger interface {
 	Warningf(string, ...interface{})
 	Infof(string, ...interface{})
 	Debugf(string, ...interface{})
+	Tracef(string, ...interface{})
 }
 
 func LogLevelFromEnvironment() LogLevel {
 	logLevel, _ := os.LookupEnv("LOG_LEVEL")
 	switch strings.ToLower(logLevel) {
+	case "trace":
+		return LogTrace
 	case "error":
 		return LogError
 	case "warn":

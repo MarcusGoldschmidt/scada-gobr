@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"context"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/buffers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
 	custonLogger "github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
@@ -13,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -22,7 +24,11 @@ import (
 func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 	ctx := context.Background()
 
-	loggerImp := custonLogger.NewSimpleLogger("RUNTIME-MANAGER", os.Stdout)
+	bufferSize := buffers.NewMaxBucketBuffer(32, buffers.MB*10)
+
+	logOutput := io.MultiWriter(os.Stderr, bufferSize)
+
+	loggerImp := custonLogger.NewSimpleLogger("GOBR", logOutput)
 	hubManager := events.NewHubManagerImpl(loggerImp)
 
 	db, err := gorm.Open(postgres.Open(opt.PostgresConnectionString), &gorm.Config{
@@ -41,6 +47,7 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 	dataSourcePersistence := gorm2.NewDataSourcePersistenceGormImpl(db)
 	dataPointPersistence := gorm2.NewDataPointPersistenceGormImpl(db, hubManager)
 	userPersistence := gorm2.NewUserPersistenceImp(db)
+	viewPersistence := gorm2.NewViewPersistenceGormImpl(db)
 
 	scadaRouter := scadaServer.NewRouter()
 
@@ -69,6 +76,8 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 		internalRoute:         scadaRouter,
 		purgeManager:          purgeManager,
 		HubManager:            hubManager,
+		viewPersistence:       viewPersistence,
+		inMemoryLogs:          bufferSize,
 	}
 
 	scada.setRouters()

@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/auth"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/buffers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
@@ -26,6 +27,7 @@ type Scadagobr struct {
 	userPersistence       persistence.UserPersistence
 	dataPointPersistence  persistence.DataPointPersistence
 	dataSourcePersistence persistence.DataSourcePersistence
+	viewPersistence       persistence.ViewPersistence
 
 	JwtHandler *auth.JwtHandler
 
@@ -39,6 +41,8 @@ type Scadagobr struct {
 
 	// Created after the server is started
 	shutdownContext func()
+
+	inMemoryLogs *buffers.MaxBucketBuffer
 }
 
 func (s *Scadagobr) Setup() error {

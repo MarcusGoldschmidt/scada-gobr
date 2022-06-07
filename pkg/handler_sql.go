@@ -6,6 +6,5 @@ import (
 )
 
 func GetDriversHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
-
 	s.respondJsonOk(w, sql.Drivers())
 }

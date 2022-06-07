@@ -11,7 +11,8 @@
     import '@fortawesome/fontawesome-free/css/all.css';
     import "@carbon/charts/styles.min.css";
     import "carbon-components/css/carbon-components.min.css";
-    import ViewsForm from "./pages/views/ViewsForm.svelte";
+    import ViewsIndex from "./pages/views/ViewsIndex.svelte";
+    import ViewsInput from "./pages/views/ViewsInput.svelte";
 </script>
 
 <Notifications/>
@@ -49,19 +50,19 @@
 
     <Route path="/views">
         <PrivateRoute>
-            <ViewsForm/>
+            <ViewsIndex/>
         </PrivateRoute>
     </Route>
 
     <Route path="/views/create">
         <PrivateRoute>
-            <UserInput/>
+            <ViewsInput/>
         </PrivateRoute>
     </Route>
 
-    <Route path="/views/edit/:id" let:params>
+    <Route path="/views/:id" let:params>
         <PrivateRoute>
-            <UserInput userId={params.id}/>
+            <ViewsInput viewId={params.id}/>
         </PrivateRoute>
     </Route>
 </Router>

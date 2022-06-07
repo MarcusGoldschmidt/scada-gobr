@@ -24,17 +24,6 @@ func GetDataSourceTypesHandler(s *Scadagobr, w http.ResponseWriter, r *http.Requ
 func GetDataSourcesHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	claims, err := auth.GetUserFromContext(ctx)
-	if err != nil {
-		s.respondError(w, err)
-		return
-	}
-
-	if !claims.Admin {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
 	sources, err := s.dataSourcePersistence.GetDadaSources(ctx)
 	if err != nil {
 		s.respondError(w, err)
@@ -63,17 +52,6 @@ func CreateDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 	dataSourceId, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
 		s.respondError(w, err)
-		return
-	}
-
-	claims, err := auth.GetUserFromContext(ctx)
-	if err != nil {
-		s.respondError(w, err)
-		return
-	}
-
-	if !claims.Admin {
-		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 

@@ -15,6 +15,8 @@ type SimpleLogger struct {
 func NewSimpleLogger(name string, out io.Writer) Logger {
 	logger := log.New()
 
+	logger.Out = out
+
 	logger.SetFormatter(&log.TextFormatter{
 		FullTimestamp: true,
 	})
@@ -30,6 +32,12 @@ func NewSimpleLoggerWithLevel(name string, out io.Writer, level LogLevel) Logger
 	return &SimpleLogger{
 		Logger:   log.New(),
 		LogLevel: level,
+	}
+}
+
+func (l *SimpleLogger) Tracef(s string, i ...interface{}) {
+	if l.LogLevel <= LogError {
+		l.Logger.Tracef(s, i...)
 	}
 }
 

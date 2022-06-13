@@ -14,7 +14,7 @@ const (
 )
 
 type DataPoint struct {
-	Id           shared.CommonId `gorm:"type:uuid"`
+	Id           shared.CommonId `json:"id" gorm:"type:uuid"`
 	DataSourceId shared.CommonId `json:"dataSourceId"`
 	Name         string          `json:"name"`
 	IsEnable     bool            `json:"isEnable"`

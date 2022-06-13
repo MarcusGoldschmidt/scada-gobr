@@ -17,7 +17,7 @@ func GetWsDataPoint(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, err := wsUpgrader.Upgrade(w, r, nil)
+	conn, err := wsUpgrade.Upgrade(w, r, nil)
 	if err != nil {
 		s.respondError(w, err)
 		return

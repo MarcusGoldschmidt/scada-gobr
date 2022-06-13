@@ -57,7 +57,7 @@
     }
 
     // form data for view components
-    let selectedType: ViewComponentType = null
+    let selectedType: ViewComponentType = ViewComponentType.TimeSeries
     let componentsFormData = {}
     let selectedComponentId = null
 
@@ -119,6 +119,23 @@
 
 
     }
+    let removeComponent = async () => {
+        if (selectedComponentId == null) {
+            return
+        }
+
+        if (viewId) {
+            try {
+                await axiosJwt.delete(PathsV1.ViewComponentDelete(viewId, selectedComponentId))
+                sendNotification("Data point deleted successfully", "", NotificationType.Info)
+            } catch (e) {
+                sendNotification("Error deleting the data point", "", NotificationType.Danger)
+            }
+        }
+
+        viewComponents = viewComponents.filter(e => e.id !== selectedComponentId)
+        resetHelper()
+    };
 </script>
 
 <svelte:window on:keydown={(event) => {
@@ -187,7 +204,7 @@
 
 {#if showViewComponentsForm}
     <div
-            style="position: absolute; right: 0; z-index: 999"
+            style="position: absolute; right: 0; z-index: 999; min-width: 20%"
             in:fly="{{ x: 200, duration: 400 }}"
             out:fly="{{ x: 200, duration: 500 }}">
         <div class="box">
@@ -195,12 +212,23 @@
                on:click={resetHelper}
                style="font-size: 2rem"></i>
 
+            <div class="columns">
+                <div class="column is-two-thirds has-text-left">
+                    <h2>Component</h2>
+                </div>
+                {#if selectedComponentId}
+                    <div class="column has-text-right">
+                        <button class="button is-danger" on:click={removeComponent}>Remove</button>
+                    </div>
+                {/if}
+            </div>
+
+
             <div class="field has-text-left">
-                <h2>Component</h2>
             </div>
             {#if !selectedComponentId}
-                <div class="select">
-                    <select bind:value={selectedType}>
+                <div class="select" style="width: 100%">
+                    <select bind:value={selectedType} style="width: 100%">
                         <option>Select dropdown</option>
                         <option value={ViewComponentType.Text}>Teste</option>
                         <option value={ViewComponentType.TimeSeries}>Time Series</option>

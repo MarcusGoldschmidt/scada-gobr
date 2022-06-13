@@ -9,7 +9,7 @@
 
 </script>
 
-<Field class="mt-5" label="Text">
+<Field class="mt-3" label="Text">
     <Input class="input"
            bind:value={text}
            on:change={(e) => dispatch('change', {text: e.target.value})}

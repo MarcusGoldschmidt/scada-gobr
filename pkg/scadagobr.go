@@ -38,6 +38,7 @@ type Scadagobr struct {
 
 	purgeManager *purge.Manager
 	HubManager   events.HubManager
+	wsManager    WsManager
 
 	// Created after the server is started
 	shutdownContext func()

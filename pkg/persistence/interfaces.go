@@ -48,6 +48,7 @@ type ViewPersistence interface {
 	GetAllViews(context.Context) ([]*models.View, error)
 
 	AttachViewComponents(context.Context, ...*models.ViewComponent) error
+	DeleteViewComponent(ctx context.Context, viewId uuid.UUID, componentId uuid.UUID) error
 
 	CreateView(context.Context, *models.View) error
 	UpdateView(context.Context, *models.View) error

@@ -66,6 +66,7 @@ func (s *Scadagobr) setRouters() {
 	s.delete("/api/v1/datasource/{id}/datapoint/{dataPointId}", s.authAndIsAdminMiddleware(DeleteDataPointHandler))
 
 	// Websocket
+	// TODO: Add authentication for websocket
 	s.get("/api/v1/datapoint/ws/{id}", GetWsDataPoint)
 
 	// Views
@@ -74,4 +75,5 @@ func (s *Scadagobr) setRouters() {
 	s.post("/api/v1/view", s.authAndIsAdminMiddleware(CreateViewHandler))
 	s.put("/api/v1/view/{id}", s.authAndIsAdminMiddleware(UpdateViewHandler))
 	s.delete("/api/v1/view/{id}", s.authAndIsAdminMiddleware(DeleteViewHandler))
+	s.delete("/api/v1/view/{id}/component/{componentId}", s.authAndIsAdminMiddleware(DeleteViewComponentHandler))
 }

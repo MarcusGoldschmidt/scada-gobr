@@ -48,7 +48,7 @@
   }
 </style>
 
-<ul class="notifications">
+<ul class="notifications" style="z-index: 9999">
     {#each notifications as notification (notification.id)}
         <li>
             <div class="notification is-{notification.type} timeout"

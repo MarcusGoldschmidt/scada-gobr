@@ -1,8 +1,8 @@
 <script lang="ts">
-
     import {ViewComponentType} from "../../shared/types";
     import TextForm from "./TextForm.svelte";
     import {createEventDispatcher} from 'svelte';
+    import TimeSeriesForm from "./TimeSeriesForm.svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -16,6 +16,11 @@
 </script>
 
 {#if type === ViewComponentType.TimeSeries}
+    <TimeSeriesForm
+            defaultPeriod={data.period}
+            defaultWidth={data.width}
+            on:change={onChange}
+    ></TimeSeriesForm>
 {/if}
 
 {#if type === ViewComponentType.Graphical}

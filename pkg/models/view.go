@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/google/uuid"
+	"time"
 )
 
 //go:generate stringer -type=ViewType -output=view_type_string.go
@@ -37,6 +38,9 @@ func NewPosition(x int, y int) *Position {
 }
 
 type TimeSeriesView struct {
+	DataPointsId []uuid.UUID   `json:"dataPointsId"`
+	Period       time.Duration `json:"period"`
+	Width        int           `json:"width"`
 }
 
 type GraphicalView struct {

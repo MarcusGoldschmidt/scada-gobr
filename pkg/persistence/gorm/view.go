@@ -62,3 +62,8 @@ func (v ViewPersistenceGormImpl) DeleteView(ctx context.Context, uuid uuid.UUID)
 	db := v.db.WithContext(ctx)
 	return db.Delete(&models.View{Id: uuid}).Error
 }
+
+func (v ViewPersistenceGormImpl) DeleteViewComponent(ctx context.Context, viewId uuid.UUID, componentId uuid.UUID) error {
+	db := v.db.WithContext(ctx)
+	return db.Delete(&models.ViewComponent{Id: componentId, ViewId: viewId}).Error
+}

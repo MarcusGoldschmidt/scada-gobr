@@ -148,3 +148,25 @@ func DeleteViewHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 }
+
+func DeleteViewComponentHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+	viewId, err := uuid.Parse(mux.Vars(r)["id"])
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
+	componentId, err := uuid.Parse(mux.Vars(r)["componentId"])
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
+	err = s.viewPersistence.DeleteViewComponent(r.Context(), viewId, componentId)
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

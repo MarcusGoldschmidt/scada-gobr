@@ -13,6 +13,24 @@ import (
 	"time"
 )
 
+func GetDataPointByIdHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id, err := uuid.Parse(mux.Vars(r)["id"])
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
+	points, err := s.dataPointPersistence.GetDataPointById(ctx, id)
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
+	s.respondJsonOk(w, points)
+}
+
 func GetDataPointsHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

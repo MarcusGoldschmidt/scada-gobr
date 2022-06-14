@@ -209,7 +209,7 @@
 <LineChart
         data={data}
         options={{
-	"title": "Line (dense time series)",
+	"title": "Teste",
 	"axes": {
 		"bottom": {
 			"mapsTo": "date",
@@ -221,7 +221,10 @@
 		}
 	},
 	"curve": "curveMonotoneX",
-	"height": "400px"
+	"height": "500px",
+	legend: {
+        enable: false
+	}
 }}
 />
 

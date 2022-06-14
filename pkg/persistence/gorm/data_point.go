@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"gorm.io/gorm"
 	"time"
@@ -16,6 +17,26 @@ type DataPointPersistenceGormImpl struct {
 
 func NewDataPointPersistenceGormImpl(db *gorm.DB, hubManager events.HubManager) *DataPointPersistenceGormImpl {
 	return &DataPointPersistenceGormImpl{db: db, hubManager: hubManager}
+}
+
+func (d DataPointPersistenceGormImpl) GetPointValuesByIds(ctx context.Context, id []shared.CommonId, begin time.Time, end time.Time) ([]*persistence.SeriesGroupIdentifier, error) {
+	db := d.db.WithContext(ctx)
+
+	query := `
+SELECT 
+	CONCAT(data_sources.name, '-', data_points.name) as Group
+, 	timestamp AS Timestamp
+, 	value AS Value 
+FROM data_series
+INNER JOIN data_points ON data_points.id = data_series.data_point_id
+INNER JOIN data_sources ON data_sources.id = data_points.data_source_id
+WHERE data_point_id IN (?) AND timestamp > ? AND timestamp < ?
+`
+
+	var values []*persistence.SeriesGroupIdentifier
+	response := db.Raw(query, id, begin, end).Scan(&values)
+
+	return values, response.Error
 }
 
 func (d DataPointPersistenceGormImpl) DeleteDataPointValueByPeriod(ctx context.Context, id shared.CommonId, begin time.Time, end time.Time) error {

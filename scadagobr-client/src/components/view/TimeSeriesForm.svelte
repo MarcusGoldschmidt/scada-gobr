@@ -12,11 +12,22 @@
 
     let currentDataSet: any = null
 
-    export let selectedDataPoints: any[] = []
+    let selectedDataPoints: any[] = []
+    export let label = "Time Series"
     export let defaultPeriod = 60
     export let defaultWidth = 300
+    export let defaultHeight = 200
+    export let selectedDataPointsIds: string[] = []
 
     let selectedDataPoint = null
+
+    onMount(async () => {
+        if (selectedDataPointsIds) {
+            const response = await Promise.all(selectedDataPointsIds.map(e => axiosJwt.get(PathsV1.DataPointGetById(e))));
+
+            selectedDataPoints = [].concat(...response.map(e => e.data));
+        }
+    })
 
     $: {
         if (currentDataSet) {
@@ -46,7 +57,7 @@
             return
         }
 
-        if (selectedDataPoints.findIndex(x => x === selectedDataPoint) == -1) {
+        if (selectedDataPoints.findIndex(x => x.id === selectedDataPoint.id) == -1) {
             selectedDataPoints = [...selectedDataPoints, selectedDataPoint]
             onChange()
         } else {
@@ -55,14 +66,16 @@
     }
 
     let removeDataPoint = (e) => {
-        if (selectedDataPoint == null) {
-            return
-        }
-
-        selectedDataPoints = selectedDataPoints.filter(x => x !== selectedDataPoint)
+        selectedDataPoints = selectedDataPoints.filter(x => x.id !== e.id)
         onChange()
     };
 </script>
+
+<label class="label mt-3">Label</label>
+<input class="input"
+       bind:value={label}
+       on:change={onChange}
+       placeholder="Label"/>
 
 <label class="label mt-3">Default period (minutes)</label>
 <input class="input"
@@ -74,6 +87,13 @@
 <label class="label mt-3">Default width</label>
 <input class="input"
        bind:value={defaultWidth}
+       on:change={onChange}
+       type="number"
+       placeholder="Text"/>
+
+<label class="label mt-3">Default height</label>
+<input class="input"
+       bind:value={defaultHeight}
        on:change={onChange}
        type="number"
        placeholder="Text"/>
@@ -115,7 +135,7 @@
                     <p>{dataPoint.name}</p>
                 </div>
                 <div class="column has-text-right">
-                    <button class="button is-small" on:click={removeDataPoint}>Remove</button>
+                    <button class="button is-small" on:click={() => removeDataPoint(dataPoint)}>Remove</button>
                 </div>
             </div>
         </li>

@@ -1,9 +1,23 @@
 package providers
 
 import (
+	"context"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
+
+const TimeProviderCtxKey = "timeProvider"
+
+func GetTimeProviderFromCtx(ctx context.Context) TimeProvider {
+	if ctx == nil {
+		return TimeProvider(&UtcTimeProvider{})
+	}
+
+	if provider, ok := ctx.Value(TimeProviderCtxKey).(TimeProvider); ok {
+		return provider
+	}
+	return TimeProvider(&UtcTimeProvider{})
+}
 
 var DefaultTimeProvider = UtcTimeProvider{}
 

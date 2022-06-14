@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"github.com/google/uuid"
 	"time"
 )
@@ -38,9 +39,11 @@ func NewPosition(x int, y int) *Position {
 }
 
 type TimeSeriesView struct {
-	DataPointsId []uuid.UUID   `json:"dataPointsId"`
-	Period       time.Duration `json:"period"`
-	Width        int           `json:"width"`
+	Label        string            `json:"label"`
+	DataPointsId []shared.CommonId `json:"dataPointsId"`
+	Period       time.Duration     `json:"period"`
+	Width        int               `json:"width"`
+	Height       int               `json:"height"`
 }
 
 type GraphicalView struct {

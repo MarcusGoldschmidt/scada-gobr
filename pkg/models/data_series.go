@@ -8,7 +8,7 @@ import (
 type DataSeries struct {
 	Timestamp   time.Time       `json:"timestamp" gorm:"type:timestamp"`
 	Value       float64         `json:"value"`
-	DataPointId shared.CommonId `json:"-"`
+	DataPointId shared.CommonId `json:"-" gorm:"type:uuid"`
 }
 
 func NewDataSeries(timeStamp time.Time, value float64, dataPointId shared.CommonId) *DataSeries {

@@ -55,6 +55,9 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 	runtimeManager := runtime.NewRuntimeManager(loggerImp, dataPointPersistence)
 	runtimeManager.WithTimeProvider(providers.UtcTimeProvider{})
 
+	// Providers
+	timeProvider := providers.UtcTimeProvider{}
+
 	// Route to net server datasource
 	r := mux.NewRouter()
 	r.Handle("/api/datasource/integration", scadaRouter)
@@ -78,6 +81,7 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 		HubManager:            hubManager,
 		viewPersistence:       viewPersistence,
 		inMemoryLogs:          bufferSize,
+		timeProvider:          timeProvider,
 	}
 
 	scada.setRouters()

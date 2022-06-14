@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {Notification, notificationStore, NotificationType} from "../../shared/stores/notifications";
+    import {Notification, notificationStore} from "../../shared/stores/notifications";
     import {fly} from 'svelte/transition';
 
     let notifications: Notification[] = []

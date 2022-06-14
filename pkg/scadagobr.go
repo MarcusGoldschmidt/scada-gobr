@@ -8,6 +8,7 @@ import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/purge"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/runtime"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/server"
@@ -34,11 +35,12 @@ type Scadagobr struct {
 	server *http.Server
 	router *mux.Router
 
+	timeProvider providers.TimeProvider
+
 	internalRoute *server.Router
 
 	purgeManager *purge.Manager
 	HubManager   events.HubManager
-	wsManager    WsManager
 
 	// Created after the server is started
 	shutdownContext func()
@@ -70,6 +72,7 @@ func (s *Scadagobr) Setup() error {
 }
 
 func (s *Scadagobr) Run(ctx context.Context) error {
+	ctx = context.WithValue(ctx, providers.TimeProviderCtxKey, s.timeProvider)
 	ctx, s.shutdownContext = context.WithCancel(ctx)
 
 	go s.purgeManager.Work(ctx)

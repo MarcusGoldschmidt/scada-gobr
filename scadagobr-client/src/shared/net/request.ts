@@ -16,6 +16,8 @@ export const PathsV1 = {
     ViewDelete: 'api/v1/view/',
     ViewUpdate: 'api/v1/view/',
     ViewGetById: 'api/v1/view/',
+    // View TimeSeries
+    DataSeriesGetByGroup: '/api/v1/data-series/group',
     // View Components
     ViewComponentDelete: (viewId, componentId) => `/api/v1/view/${viewId}/component/${componentId}`,
     // DataSources
@@ -25,6 +27,7 @@ export const PathsV1 = {
     DataSourceUpdate: 'api/v1/datasource/',
     DataSourceGetById: 'api/v1/datasource/',
     // DataPoints
+    DataPointGetById: (dataPointId) => `/api/v1/datapoint/${dataPointId}`,
     DataPointGet: (dataSourceId) => `/api/v1/datasource/${dataSourceId}/datapoint`,
     DataPointCreate: (dataSourceId) => `/api/v1/datasource/${dataSourceId}/datapoint`,
     DataPointDelete: (dataSourceId, dataPointId) => `/api/v1/datasource/${dataSourceId}/datapoint/${dataPointId}`,

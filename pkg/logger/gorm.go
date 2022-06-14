@@ -22,6 +22,8 @@ type GormLogger struct {
 func NewGormLogger() *GormLogger {
 	logger := log.New()
 
+	logger.Level = log.TraceLevel
+
 	logger.SetFormatter(&log.TextFormatter{
 		FullTimestamp: true,
 	})

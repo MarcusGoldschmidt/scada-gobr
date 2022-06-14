@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/auth"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strings"
@@ -19,6 +20,17 @@ func (s *Scadagobr) setupCors() {
 			if r.Method == "OPTIONS" {
 				return
 			}
+			next.ServeHTTP(w, r)
+		})
+	})
+}
+
+func (s *Scadagobr) setupProviders() {
+	s.router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), providers.TimeProviderCtxKey, s.timeProvider)
+			r.WithContext(ctx)
+
 			next.ServeHTTP(w, r)
 		})
 	})

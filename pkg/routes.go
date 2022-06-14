@@ -34,6 +34,7 @@ func (s *Scadagobr) delete(path string, f RequestHandlerFunction) {
 func (s *Scadagobr) setRouters() {
 	s.setupLogs()
 	s.setupCors()
+	s.setupProviders()
 
 	s.get("/api/healthcheck", HealthCheckHandler)
 
@@ -60,10 +61,14 @@ func (s *Scadagobr) setRouters() {
 	s.put("/api/v1/datasource/{id}", s.authAndIsAdminMiddleware(EditDataSourceHandler))
 
 	// DataPoints
+	s.get("/api/v1/datapoint/{id}", s.authAndIsAdminMiddleware(GetDataPointByIdHandler))
 	s.get("/api/v1/datasource/{id}/datapoint", s.authAndIsAdminMiddleware(GetDataPointsHandler))
 	s.post("/api/v1/datasource/{id}/datapoint", s.authAndIsAdminMiddleware(CreateDataPointHandler))
 	s.put("/api/v1/datasource/{id}/datapoint/{dataPointId}", s.authAndIsAdminMiddleware(EditDataPointHandler))
 	s.delete("/api/v1/datasource/{id}/datapoint/{dataPointId}", s.authAndIsAdminMiddleware(DeleteDataPointHandler))
+
+	// DataSeries
+	s.get("/api/v1/data-series/group", s.authAndIsAdminMiddleware(GetDataSeriesByGroup))
 
 	// Websocket
 	// TODO: Add authentication for websocket

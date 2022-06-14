@@ -45,8 +45,8 @@
         const bodyRect = document.body.getBoundingClientRect()
         const elemRect = reference.getBoundingClientRect()
 
-        const positionY = event.clientY - (elemRect.top - bodyRect.top)
-        const positionX = event.clientX - (elemRect.left - bodyRect.left)
+        const positionY = event.clientY
+        const positionX = event.clientX
 
         viewsComponents[currentDrag] = {
             ...viewsComponents[currentDrag],
@@ -74,13 +74,7 @@
     <div>
         {#each viewsComponents as view, i (view.id)}
             <div style="position: absolute; top: {view.y || 0}px; left: {view.x || 0}px; z-index: 999">
-                <ViewComponentView
-                        type={view.type}
-                        data={view.data}
-                ></ViewComponentView>
-
-
-                <span class="fa-solid fa-arrows-up-down-left-right"
+                <span class="relative fa-solid fa-arrows-up-down-left-right"
                       on:mouseenter={() => handleCursorHover('grab')}
                       on:mouseout={() => handleCursorHover('')}
                       on:mouseup={() => stopDragging(i)}
@@ -91,6 +85,11 @@
                       style="cursor: pointer;"
                       on:click={() => dispatch('edit', {view, index: i})}
                 ></span>
+
+                <ViewComponentView
+                        type={view.type}
+                        data={view.data}
+                ></ViewComponentView>
             </div>
         {/each}
     </div>
@@ -99,5 +98,9 @@
 <style lang="scss">
   .drag-zone {
     min-height: 94vh;
+  }
+
+  .relative {
+    position: relative;
   }
 </style>

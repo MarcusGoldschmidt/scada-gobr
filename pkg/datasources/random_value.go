@@ -51,11 +51,11 @@ func (c *RandomValueWorker) Run(ctx context.Context, errorChan chan<- error) {
 			for _, point := range c.dataPoints {
 				value := point.InitialValue + rand.Int63n(point.EndValue-point.InitialValue)
 
-				currentTime := providers.DefaultTimeProvider.GetCurrentTime()
+				currentTime := providers.GetTimeProviderFromCtx(ctx).GetCurrentTime()
 
 				series := shared.NewSeries(float64(value), currentTime)
 
-				err := c.persistence.AddDataPointValue(ctx, c.dataSourceId, series)
+				err := c.persistence.AddDataPointValue(ctx, point.Id(), series)
 				if err != nil {
 					errorChan <- err
 					return

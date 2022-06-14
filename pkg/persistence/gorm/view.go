@@ -11,6 +11,10 @@ type ViewPersistenceGormImpl struct {
 	db *gorm.DB
 }
 
+func (v ViewPersistenceGormImpl) GetViewComponentById(ctx context.Context, u uuid.UUID) (*models.ViewComponent, error) {
+	return getById[models.ViewComponent](v.db.WithContext(ctx), u)
+}
+
 func NewViewPersistenceGormImpl(db *gorm.DB) *ViewPersistenceGormImpl {
 	return &ViewPersistenceGormImpl{db: db}
 }

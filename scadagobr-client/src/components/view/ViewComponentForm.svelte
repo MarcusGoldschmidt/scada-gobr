@@ -19,6 +19,7 @@
     <TimeSeriesForm
             defaultPeriod={data.period}
             defaultWidth={data.width}
+            selectedDataPointsIds={data.dataPointsIds}
             on:change={onChange}
     ></TimeSeriesForm>
 {/if}

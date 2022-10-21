@@ -3,16 +3,13 @@ package pkg
 import (
 	"context"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/auth"
-	"github.com/MarcusGoldschmidt/scadagobr/pkg/buffers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
-	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/purge"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/runtime"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/server"
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 	"net/http"
@@ -44,29 +41,21 @@ type Scadagobr struct {
 
 	// Created after the server is started
 	shutdownContext func()
-
-	inMemoryLogs *buffers.MaxBucketBuffer
 }
 
-func (s *Scadagobr) Setup() error {
+func (s *Scadagobr) Setup(ctx context.Context) error {
 
-	var user *models.User
-	result := s.Db.Model(&models.User{}).Where(models.User{Name: "admin"}).First(&user)
-
-	if result.RowsAffected == 0 {
-		result := s.Db.Create(&models.User{
-			ID:            uuid.New(),
-			Name:          "admin",
-			Administrator: true,
-			Email:         &s.Option.AdminEmail,
-			HomeUrl:       "/",
-			PasswordHash:  auth.MakeHash(s.Option.AdminPassword),
-		})
-
-		if result.Error != nil {
-			return result.Error
-		}
+	err := s.userPersistence.CreateAdminUser(ctx, s.Option.AdminEmail, s.Option.AdminPassword)
+	if err != nil {
+		return err
 	}
+
+	datasourceManagers, err := LoadDataSourcesRuntimeManager(ctx, s)
+	if err != nil {
+		return err
+	}
+
+	s.RuntimeManager.AddDataSourceManager(datasourceManagers...)
 
 	return nil
 }
@@ -77,7 +66,10 @@ func (s *Scadagobr) Run(ctx context.Context) error {
 
 	go s.purgeManager.Work(ctx)
 
-	s.RuntimeManager.RunAll(ctx)
+	err := s.RuntimeManager.RunAll(ctx)
+	if err != nil {
+		return err
+	}
 
 	s.Logger.Infof("Start HTTP server with address: %s", s.server.Addr)
 

@@ -78,7 +78,7 @@ type CreateUserRequest struct {
 }
 
 func (r *CreateUserRequest) ToUser() *models.User {
-	hash := auth.MakeHash(r.Password)
+	hash, _ := auth.MakeHash(r.Password)
 
 	return &models.User{
 		ID:            uuid.New(),
@@ -194,7 +194,7 @@ func UpdateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if request.Password != "" {
-		user.PasswordHash = auth.MakeHash(request.Password)
+		user.PasswordHash, _ = auth.MakeHash(request.Password)
 	}
 
 	err = s.userPersistence.UpdateUser(ctx, user)

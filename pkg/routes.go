@@ -72,7 +72,7 @@ func (s *Scadagobr) setRouters() {
 
 	// Websocket
 	// TODO: Add authentication for websocket
-	s.get("/api/v1/datapoint/ws/{id}", GetWsDataPoint)
+	s.get("/ws/v1/view/component/time-series/{id}", GetWsTimeSeriesViewComponent)
 
 	// Views
 	s.get("/api/v1/view", s.authAndIsAdminMiddleware(GetViewsHandler))

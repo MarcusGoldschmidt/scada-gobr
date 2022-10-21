@@ -5,6 +5,7 @@ import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"github.com/google/uuid"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -15,11 +16,15 @@ func GetDataSeriesByGroup(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 	periodString := r.URL.Query()["period"]
 	period := time.Minute * 60
 	if len(periodString) != 0 {
-		period, err = time.ParseDuration(periodString[0])
+
+		periodInt, err := strconv.ParseInt(periodString[0], 10, 64)
+
 		if err != nil {
 			s.respondError(w, err)
 			return
 		}
+
+		period = time.Duration(int64(time.Minute) * periodInt)
 	}
 
 	strings := r.URL.Query()["dataPointsIds[]"]

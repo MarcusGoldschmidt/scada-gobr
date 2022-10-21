@@ -28,7 +28,6 @@ func newDataSourceRuntimeManagerStatus(manager datasources.DataSourceRuntimeMana
 }
 
 func (r *Manager) GetAllDataSources() []*DataSourceRuntimeManagerStatus {
-
 	var response []*DataSourceRuntimeManagerStatus
 
 	for _, manager := range r.dataSources {

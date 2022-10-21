@@ -6,7 +6,7 @@ import (
 )
 
 type DataSource struct {
-	ID         shared.CommonId `json:"id" gorm:"type:uuid"`
+	Id         shared.CommonId `json:"id" gorm:"type:uuid"`
 	Name       string          `json:"name"`
 	Data       []byte          `json:"-" gorm:"type:jsonb"`
 	Type       DataSourceType  `json:"type"`

@@ -14,6 +14,11 @@ type fakeUserPersistence struct {
 	mock *models.User
 }
 
+func (f fakeUserPersistence) CreateAdminUser(ctx context.Context, email string, password string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (f fakeUserPersistence) GetUserById(ctx context.Context, u uuid.UUID) (*models.User, error) {
 	return f.mock, nil
 }

@@ -5,12 +5,13 @@ import "testing"
 func TestHash(t *testing.T) {
 	password := "teste"
 
-	hash := MakeHash(password)
+	hash, err := MakeHash(password)
 
-	validatePassword, err := ValidatePassword(password, hash)
 	if err != nil {
 		t.Error(err)
 	}
+
+	validatePassword := ValidatePassword(password, hash)
 
 	if !validatePassword {
 		t.Fail()

@@ -14,6 +14,10 @@ type SeriesGroupIdentifier struct {
 	Group     string    `json:"group"`
 }
 
+func NewSeriesGroupIdentifier(timestamp time.Time, value float64, group string) *SeriesGroupIdentifier {
+	return &SeriesGroupIdentifier{Timestamp: timestamp, Value: value, Group: group}
+}
+
 type DataPointPersistence interface {
 	AddDataPointValue(ctx context.Context, id shared.CommonId, value *shared.Series) error
 	AddDataPointValues(ctx context.Context, values []*models.DataSeries) error
@@ -21,6 +25,7 @@ type DataPointPersistence interface {
 
 	GetPointValues(ctx context.Context, id shared.CommonId, begin time.Time, end time.Time) ([]*shared.Series, error)
 	GetPointValuesByIds(ctx context.Context, id []shared.CommonId, begin time.Time, end time.Time) ([]*SeriesGroupIdentifier, error)
+	GetGroupNameByDataPointId(ctx context.Context, datapointId shared.CommonId) (string, error)
 
 	CreateDataPoint(ctx context.Context, dataPoint *models.DataPoint) error
 	GetDataPointById(ctx context.Context, id shared.CommonId) (*models.DataPoint, error)
@@ -46,6 +51,7 @@ type UserPersistence interface {
 	IsValidUsernameForUser(context.Context, string, uuid.UUID) (bool, error)
 	GetUsers(context.Context, *shared.PaginationRequest) ([]*models.User, error)
 
+	CreateAdminUser(ctx context.Context, email string, password string) error
 	CreateUser(context.Context, *models.User) error
 	UpdateUser(context.Context, *models.User) error
 	DeleteUser(context.Context, uuid.UUID) error

@@ -136,15 +136,17 @@ func (c *DataSourceRuntimeManagerCommon) WithWorker(worker DataSourceWorker) {
 }
 
 func (c *DataSourceRuntimeManagerCommon) Run(ctx context.Context) error {
+	c.mutex.Lock()
+
 	if c.worker == nil {
+		c.mutex.Unlock()
 		return ErrWorkerNotFound
 	}
 
 	if c.status == Running {
+		c.mutex.Unlock()
 		return fmt.Errorf("datasource %s with runtimeId: %s is aready running", c.id, c.runtimeId.String())
 	}
-
-	c.mutex.Lock()
 
 	c.confirmShutdown = make(chan bool)
 	ctx, c.shutdown = context.WithCancel(ctx)
@@ -169,6 +171,7 @@ func (c *DataSourceRuntimeManagerCommon) Run(ctx context.Context) error {
 			if ok && err != nil {
 				c.status = Error
 				c.errorReason = err
+				c.logger.Errorf("Error in data source %s with runtimeId: %s: %s", c.id, c.runtimeId.String(), err.Error())
 				c.shutdown()
 			}
 			return

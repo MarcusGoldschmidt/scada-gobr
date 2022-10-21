@@ -74,7 +74,9 @@ func DataPointToRuntimeHttpServer(dp *models.DataPoint) (*datasources.HttpServer
 }
 
 func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (datasources.DataSourceRuntimeManager, error) {
-	runtimeManager := datasources.NewDataSourceRuntimeManagerCommon(ds.ID, ds.Name, scada.Logger)
+	logger := scada.RuntimeManager.CreateLogger(ds.Id, ds.Name)
+
+	runtimeManager := datasources.NewDataSourceRuntimeManagerCommon(ds.Id, ds.Name, logger)
 
 	var worker datasources.DataSourceWorker
 
@@ -103,7 +105,7 @@ func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (dataso
 			dsTypeData.Driver,
 			dsTypeData.Query,
 			dsTypeData.ConnectionString,
-			ds.ID,
+			ds.Id,
 			scada.dataPointPersistence,
 		)
 		break
@@ -122,7 +124,7 @@ func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (dataso
 			dataPoints = append(dataPoints, random)
 		}
 
-		worker = datasources.NewRandomValueWorker(ds.ID, dsTypeData.Period, dataPoints, scada.dataPointPersistence)
+		worker = datasources.NewRandomValueWorker(ds.Id, dsTypeData.Period, dataPoints, scada.dataPointPersistence)
 		break
 	case models.HttpRequest:
 		dsTypeData, err := shared.FromJson[models.DataSourceTypeHttpRequest](ds.Data)
@@ -151,7 +153,7 @@ func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (dataso
 			ForEachDataPoint: dsTypeData.ForEachDataPoint,
 			Headers:          dsTypeData.Headers,
 		}
-		response.SetDataSourceId(ds.ID)
+		response.SetDataSourceId(ds.Id)
 
 		worker = &response
 		break
@@ -179,7 +181,7 @@ func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (dataso
 			AtmDone:      0,
 			Endpoint:     dsTypeData.Endpoint,
 		}
-		response.SetDataSourceId(ds.ID)
+		response.SetDataSourceId(ds.Id)
 
 		worker = &response
 	}

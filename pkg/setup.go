@@ -1,10 +1,8 @@
 package pkg
 
 import (
-	"context"
-	"github.com/MarcusGoldschmidt/scadagobr/pkg/buffers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
-	custonLogger "github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
+	customLogger "github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	gorm2 "github.com/MarcusGoldschmidt/scadagobr/pkg/persistence/gorm"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
@@ -14,7 +12,6 @@ import (
 	"github.com/gorilla/mux"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -22,17 +19,11 @@ import (
 )
 
 func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
-	ctx := context.Background()
-
-	bufferSize := buffers.NewMaxBucketBuffer(32, buffers.MB*10)
-
-	logOutput := io.MultiWriter(os.Stderr, bufferSize)
-
-	loggerImp := custonLogger.NewSimpleLogger("GOBR", logOutput)
+	loggerImp := customLogger.NewSimpleLogger("GOBR", os.Stderr)
 	hubManager := events.NewHubManagerImpl(loggerImp)
 
 	db, err := gorm.Open(postgres.Open(opt.PostgresConnectionString), &gorm.Config{
-		Logger: custonLogger.NewGormLogger(),
+		Logger: customLogger.NewGormLogger(),
 	})
 	if err != nil {
 		return nil, err
@@ -80,7 +71,6 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 		purgeManager:          purgeManager,
 		HubManager:            hubManager,
 		viewPersistence:       viewPersistence,
-		inMemoryLogs:          bufferSize,
 		timeProvider:          timeProvider,
 	}
 
@@ -100,13 +90,6 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 		WriteTimeout: 30 * time.Second,
 		ReadTimeout:  30 * time.Second,
 	}
-
-	datasourceManagers, err := LoadDataSourcesRuntimeManager(ctx, scada)
-	if err != nil {
-		return nil, err
-	}
-
-	scada.RuntimeManager.AddDataSourceManager(datasourceManagers...)
 
 	return scada, nil
 }

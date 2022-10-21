@@ -31,7 +31,7 @@ func (d DataSourcePersistenceGormImpl) CreateDataSource(ctx context.Context, dat
 
 func (d DataSourcePersistenceGormImpl) DeleteDataSource(ctx context.Context, id shared.CommonId) error {
 	db := d.db.WithContext(ctx)
-	return db.Delete(&models.DataSource{ID: id}).Error
+	return db.Delete(&models.DataSource{Id: id}).Error
 }
 
 func NewDataSourcePersistenceGormImpl(db *gorm.DB) *DataSourcePersistenceGormImpl {

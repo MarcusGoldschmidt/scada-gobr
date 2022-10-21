@@ -1,24 +1,16 @@
 package auth
 
 import (
-	"bytes"
-	"crypto/sha512"
-	"encoding/base64"
+	"golang.org/x/crypto/bcrypt"
+	_ "golang.org/x/crypto/bcrypt"
 )
 
-func ValidatePassword(password string, passwordHash string) (bool, error) {
-	check := sha512.Sum512([]byte(password))
-
-	passwordHashBytes, err := base64.StdEncoding.DecodeString(passwordHash)
-	if err != nil {
-		return false, err
-	}
-
-	return bytes.Compare(check[:], passwordHashBytes) == 0, nil
+func ValidatePassword(password string, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
-func MakeHash(password string) string {
-	check := sha512.Sum512([]byte(password))
-
-	return base64.StdEncoding.EncodeToString(check[:])
+func MakeHash(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"time"
 )
@@ -11,6 +12,28 @@ import (
 type InMemoryPersistence struct {
 	series     map[shared.CommonId][]*models.DataSeries
 	dataPoints map[shared.CommonId]*models.DataPoint
+}
+
+func (f *InMemoryPersistence) GetGroupNameByDataPointId(ctx context.Context, datapointId shared.CommonId) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *InMemoryPersistence) GetPointValuesByIds(ctx context.Context, ids []shared.CommonId, begin time.Time, end time.Time) ([]*persistence.SeriesGroupIdentifier, error) {
+	var result []*persistence.SeriesGroupIdentifier
+
+	for _, id := range ids {
+		if points, ok := f.series[id]; ok {
+			for _, point := range points {
+				if point.Timestamp.After(begin) && point.Timestamp.Before(end) {
+					temp := persistence.NewSeriesGroupIdentifier(point.Timestamp, point.Value, "")
+					result = append(result, temp)
+				}
+			}
+		}
+	}
+
+	return result, nil
 }
 
 func (f *InMemoryPersistence) DeleteDataPointValueByPeriod(ctx context.Context, id shared.CommonId, begin time.Time, end time.Time) error {

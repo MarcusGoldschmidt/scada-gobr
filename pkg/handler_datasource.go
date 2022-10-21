@@ -68,7 +68,7 @@ func CreateDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 	}
 
 	datasource := &models.DataSource{
-		ID:   uuid.New(),
+		Id:   uuid.New(),
 		Name: command.Name,
 		Type: ds.Type,
 	}

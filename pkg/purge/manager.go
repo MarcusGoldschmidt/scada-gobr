@@ -33,14 +33,12 @@ func NewManager(
 }
 
 func (m *Manager) Purge(ctx context.Context) error {
-
 	points, err := m.dataPointPersistence.GetAllDataPoints(ctx)
 	if err != nil {
 		return err
 	}
 
 	for _, point := range points {
-
 		if point.PurgeAfter == nil {
 			continue
 		}
@@ -63,12 +61,12 @@ func (m *Manager) Work(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			m.logger.Errorf("%s", ctx.Err())
 			return
 		case <-ticker.C:
 			err := m.Purge(ctx)
 			if err != nil {
 				m.logger.Errorf("%s", err.Error())
-				return
 			}
 		}
 	}

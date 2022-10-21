@@ -38,12 +38,12 @@ func TestSimpleRuntime(t *testing.T) {
 
 	<-time.After(2 * time.Second)
 
-	values, err := memoryPersistence.GetPointValues(ctx, worker.dataSourceId, beforeRun, time.Now())
+	values, err := memoryPersistence.GetPointValues(ctx, dataPoint.Id(), beforeRun, time.Now())
 	if err != nil {
 		t.Error(err)
 	}
 
 	if len(values) != 4 {
-		t.Errorf("got %d", len(values))
+		t.Errorf("expected %d got %d", 4, len(values))
 	}
 }

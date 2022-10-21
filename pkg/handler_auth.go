@@ -34,11 +34,7 @@ func LoginHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	success, err := auth.ValidatePassword(request.Password, user.PasswordHash)
-	if err != nil {
-		s.respondError(w, err)
-		return
-	}
+	success := auth.ValidatePassword(request.Password, user.PasswordHash)
 
 	if !success {
 		w.WriteHeader(http.StatusUnauthorized)

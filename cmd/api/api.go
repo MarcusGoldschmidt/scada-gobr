@@ -25,14 +25,13 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+	ctx := context.Background()
 
-	err = scada.Setup()
+	err = scada.Setup(ctx)
 
 	if err != nil {
 		log.Panic(err)
 	}
-
-	ctx := context.Background()
 
 	err = scada.Run(ctx)
 	if err != nil {
@@ -43,7 +42,7 @@ func main() {
 	signal.Notify(c, os.Interrupt)
 	<-c
 
-	ctx, cancel := context.WithTimeout(context.Background(), opt.ShutdownWait)
+	ctx, cancel := context.WithTimeout(ctx, opt.ShutdownWait)
 	defer cancel()
 
 	scada.Shutdown(ctx)

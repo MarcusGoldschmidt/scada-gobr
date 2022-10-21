@@ -3,11 +3,14 @@ package runtime
 import (
 	"context"
 	"errors"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/buffers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/datasources"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
+	"io"
+	"os"
 	"sync"
 )
 
@@ -16,10 +19,13 @@ type ManagerOptions struct {
 }
 
 type Manager struct {
-	Logger      logger.Logger
-	mutex       sync.RWMutex
-	dataSources map[shared.CommonId]datasources.DataSourceRuntimeManager
-	options     ManagerOptions
+	Logger logger.Logger
+	mutex  sync.RWMutex
+
+	dataSources     map[shared.CommonId]datasources.DataSourceRuntimeManager
+	dataSourcesLogs map[shared.CommonId]*buffers.MaxBuffer
+
+	options ManagerOptions
 
 	persistence  persistence.DataPointPersistence
 	timeProvider providers.TimeProvider
@@ -54,7 +60,7 @@ func (r *Manager) RemoveDataSource(id shared.CommonId) {
 	delete(r.dataSources, id)
 }
 
-func (r *Manager) Run(ctx context.Context, id shared.CommonId) {
+func (r *Manager) Run(ctx context.Context, id shared.CommonId) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -63,21 +69,28 @@ func (r *Manager) Run(ctx context.Context, id shared.CommonId) {
 	err := dataSource.Run(ctx)
 	if err != nil {
 		r.Logger.Errorf("datasource runtime %s stopped with error: %s", dataSource.Name(), err.Error())
-		return
+		return err
 	}
+
+	return nil
 }
 
-func (r *Manager) RunAll(ctx context.Context) {
+func (r *Manager) RunAll(ctx context.Context) error {
 	for id, _ := range r.dataSources {
-		r.Run(ctx, id)
+		err := r.Run(ctx, id)
+		if err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
-func (r *Manager) UpdateDataSource(ctx context.Context, ds datasources.DataSourceRuntimeManager) {
+func (r *Manager) UpdateDataSource(ctx context.Context, ds datasources.DataSourceRuntimeManager) error {
 	_ = r.StopDataSource(ctx, ds.Id())
 	r.RemoveDataSource(ds.Id())
 	r.AddDataSourceManager(ds)
-	r.Run(ctx, ds.Id())
+	return r.Run(ctx, ds.Id())
 }
 
 func (r *Manager) RestartDataSource(ctx context.Context, id shared.CommonId) error {
@@ -86,8 +99,7 @@ func (r *Manager) RestartDataSource(ctx context.Context, id shared.CommonId) err
 	if err != nil {
 		return err
 	}
-	r.Run(ctx, id)
-	return nil
+	return r.Run(ctx, id)
 }
 
 func (r *Manager) StopDataSource(ctx context.Context, id shared.CommonId) error {
@@ -128,4 +140,14 @@ func (r *Manager) StopAll(ctx context.Context) {
 	}
 
 	wg.Wait()
+}
+
+func (r *Manager) CreateLogger(id shared.CommonId, name string) logger.Logger {
+	bufferSize := buffers.NewMaxBuffer(buffers.MB)
+
+	r.dataSourcesLogs[id] = bufferSize
+
+	logOutput := io.MultiWriter(os.Stderr, bufferSize)
+
+	return logger.NewSimpleLogger(id.String()+"-"+name, logOutput)
 }

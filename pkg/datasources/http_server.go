@@ -60,9 +60,9 @@ func (c *HttpServerWorker) DataSourceId() shared.CommonId {
 }
 
 type request struct {
-	Name      string
-	Value     float64
-	Timestamp time.Time
+	Name      string    `json:"name"`
+	Value     float64   `json:"value"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 func (c *HttpServerWorker) Run(ctx context.Context, errorChan chan<- error) {
@@ -79,7 +79,6 @@ func (c *HttpServerWorker) Run(ctx context.Context, errorChan chan<- error) {
 		case <-ctx.Done():
 			return
 		case data := <-channel:
-
 			dict := make(map[string]shared.CommonId)
 
 			for _, point := range c.DataPoints {
@@ -147,9 +146,7 @@ func (c *HttpServerWorker) GerOrAddRoute(channel chan []*request) http.Handler {
 
 	c.Router.AddMatch(c.Endpoint, handler)
 
-	response := http.Handler(handler)
-
-	return response
+	return handler
 }
 
 func (c *HttpServerWorker) RemoveRoute() {

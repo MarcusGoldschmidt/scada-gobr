@@ -11,12 +11,44 @@ import (
 )
 
 type DataPointPersistenceGormImpl struct {
-	db         *gorm.DB
-	hubManager events.HubManager
+	db                  *gorm.DB
+	hubManager          events.HubManager
+	dataPointGroupCache map[shared.CommonId]string
 }
 
 func NewDataPointPersistenceGormImpl(db *gorm.DB, hubManager events.HubManager) *DataPointPersistenceGormImpl {
-	return &DataPointPersistenceGormImpl{db: db, hubManager: hubManager}
+	return &DataPointPersistenceGormImpl{
+		db:                  db,
+		hubManager:          hubManager,
+		dataPointGroupCache: map[shared.CommonId]string{},
+	}
+}
+
+func (d *DataPointPersistenceGormImpl) GetGroupNameByDataPointId(ctx context.Context, datapointId shared.CommonId) (string, error) {
+	db := d.db.WithContext(ctx)
+
+	if value, ok := d.dataPointGroupCache[datapointId]; ok {
+		return value, nil
+	}
+
+	query := `
+SELECT 
+	CONCAT(data_sources.name, '-', data_points.name) as Group
+FROM data_series
+INNER JOIN data_points ON data_points.id = data_series.data_point_id
+INNER JOIN data_sources ON data_sources.id = data_points.data_source_id
+WHERE data_points.id = ?
+`
+
+	var group string
+	response := db.Raw(query, datapointId).Scan(&group)
+	if response.Error != nil {
+		return "", response.Error
+	}
+
+	d.dataPointGroupCache[datapointId] = group
+
+	return group, response.Error
 }
 
 func (d DataPointPersistenceGormImpl) GetPointValuesByIds(ctx context.Context, id []shared.CommonId, begin time.Time, end time.Time) ([]*persistence.SeriesGroupIdentifier, error) {
@@ -80,7 +112,7 @@ func (d DataPointPersistenceGormImpl) AddDataPointValue(ctx context.Context, id 
 		return err
 	}
 
-	d.sendNotificationSeriesCreated(dataSeries)
+	d.sendNotificationSeriesCreated(ctx, dataSeries)
 
 	return nil
 }
@@ -93,7 +125,7 @@ func (d DataPointPersistenceGormImpl) AddDataPointValues(ctx context.Context, va
 		return err
 	}
 
-	d.sendNotificationSeriesCreated(values...)
+	d.sendNotificationSeriesCreated(ctx, values...)
 
 	return nil
 }
@@ -108,8 +140,15 @@ func (d DataPointPersistenceGormImpl) GetPointValues(ctx context.Context, id sha
 	return values, nil
 }
 
-func (d DataPointPersistenceGormImpl) sendNotificationSeriesCreated(series ...*models.DataSeries) {
+func (d *DataPointPersistenceGormImpl) sendNotificationSeriesCreated(ctx context.Context, series ...*models.DataSeries) {
 	for _, data := range series {
-		d.hubManager.SendMessage(events.DataSeriesInserter+data.DataPointId.String(), data)
+		groupName, err := d.GetGroupNameByDataPointId(ctx, data.DataPointId)
+		if err != nil {
+			continue
+		}
+
+		event := persistence.NewSeriesGroupIdentifier(data.Timestamp, data.Value, groupName)
+
+		d.hubManager.SendMessage(events.DataSeriesInserter+data.DataPointId.String(), event)
 	}
 }

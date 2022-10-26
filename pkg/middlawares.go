@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func (s *Scadagobr) setupCors() {
@@ -18,6 +19,7 @@ func (s *Scadagobr) setupCors() {
 			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 			w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization")
 			if r.Method == "OPTIONS" {
+				w.WriteHeader(200)
 				return
 			}
 			next.ServeHTTP(w, r)
@@ -30,7 +32,6 @@ func (s *Scadagobr) setupProviders() {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := context.WithValue(r.Context(), providers.TimeProviderCtxKey, s.timeProvider)
 			r.WithContext(ctx)
-
 			next.ServeHTTP(w, r)
 		})
 	})
@@ -39,8 +40,12 @@ func (s *Scadagobr) setupProviders() {
 func (s *Scadagobr) setupLogs() {
 	s.router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			s.Logger.Infof("request at %s", r.RequestURI)
+			s.Logger.Infof("Request at %s", r.RequestURI)
+			t1 := time.Now()
 			next.ServeHTTP(w, r)
+			t2 := time.Now()
+			diff := t2.Sub(t1)
+			s.Logger.Tracef("Request at %s took [%s]", r.RequestURI, diff)
 		})
 	})
 }

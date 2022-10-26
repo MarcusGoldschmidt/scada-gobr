@@ -1,6 +1,10 @@
 import {Button, Checkbox, Form, Input, notification} from 'antd';
 import React from 'react';
 import {openNotificationWithIcon} from "../../infra/notification";
+import {axios} from "../../infra/axios";
+import {PathsV1} from "../../infra/endpoints";
+import {userStore} from "../../core/stores/userStore";
+import {JwtToken} from "../../infra/response_types";
 
 const openNotification = () => {
     notification.open({
@@ -15,13 +19,17 @@ const openNotification = () => {
 
 const App: React.FC = () => {
     const onFinish = async (values: any) => {
+        const {data} = await axios.post<JwtToken>(PathsV1.Login, values)
 
-    };
+        userStore.getState().setUser({
+            ...data,
+            isLoggedIn: true,
+            name: values.username,
+        })
 
-    const onFinishFailed = (errorInfo: any) => {
         openNotificationWithIcon({
-            message: 'Error',
-        });
+            message: 'Login with sucess',
+        }, 'success')
     };
 
     return (
@@ -31,7 +39,6 @@ const App: React.FC = () => {
             wrapperCol={{ span: 16 }}
             initialValues={{ remember: true }}
             onFinish={onFinish}
-            onFinishFailed={onFinishFailed}
             autoComplete="off"
         >
             <Form.Item

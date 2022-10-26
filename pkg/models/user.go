@@ -7,7 +7,7 @@ import (
 
 type User struct {
 	ID            uuid.UUID `json:"id" gorm:"type:uuid"`
-	PasswordHash  string    `json:"passwordHash"`
+	PasswordHash  string    `json:"-" `
 	Name          string    `json:"name" gorm:"unique"`
 	Email         *string   `json:"email"`
 	HomeUrl       string    `json:"homeUrl"`

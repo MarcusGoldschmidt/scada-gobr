@@ -12,16 +12,16 @@ func LoadDataSourcesRuntimeManager(ctx context.Context, s *Scadagobr) ([]datasou
 		return nil, err
 	}
 
-	var dsrm []datasources.DataSourceRuntimeManager
+	dsrm := make([]datasources.DataSourceRuntimeManager, len(ds))
 
-	for _, d := range ds {
+	for i, d := range ds {
 
 		manager, err := DataSourceToRuntimeManager(s, d)
 		if err != nil {
 			return nil, err
 		}
 
-		dsrm = append(dsrm, manager)
+		dsrm[i] = manager
 	}
 
 	return dsrm, nil

@@ -163,13 +163,13 @@ func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (dataso
 			return nil, err
 		}
 
-		dataPoints := make([]*datasources.HttpServerDataPoint, 0)
-		for _, point := range ds.DataPoints {
+		dataPoints := make([]*datasources.HttpServerDataPoint, len(ds.DataPoints))
+		for i, point := range ds.DataPoints {
 			httpRequestDp, err := DataPointToRuntimeHttpServer(point)
 			if err != nil {
 				return nil, err
 			}
-			dataPoints = append(dataPoints, httpRequestDp)
+			dataPoints[i] = httpRequestDp
 		}
 
 		response := datasources.HttpServerWorker{

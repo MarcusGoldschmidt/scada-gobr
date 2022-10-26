@@ -8,7 +8,7 @@ import (
 )
 
 type loginRequest struct {
-	Name     string
+	Username string
 	Password string
 }
 
@@ -28,7 +28,7 @@ func LoginHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := s.userPersistence.GetUserByName(ctx, request.Name)
+	user, err := s.userPersistence.GetUserByName(ctx, request.Username)
 	if err != nil {
 		s.respondError(w, err)
 		return

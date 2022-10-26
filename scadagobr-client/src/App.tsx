@@ -1,9 +1,11 @@
-import {useState} from 'react'
 import AppRouter from "./infra/components/AppRouter";
+import {ReactQueryProvider} from "./infra/react-query";
 
 function App() {
     return <>
-        <AppRouter></AppRouter>
+        <ReactQueryProvider>
+            <AppRouter></AppRouter>
+        </ReactQueryProvider>
     </>
 }
 

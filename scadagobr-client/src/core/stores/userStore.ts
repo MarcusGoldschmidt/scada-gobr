@@ -7,7 +7,6 @@ export interface User {
     tokenExpiration: string
     refreshToken: string
     isLoggedIn: boolean
-    email: string
     name: string,
 }
 
@@ -16,7 +15,6 @@ const defaultUser: User = {
     refreshToken: '',
     tokenExpiration: '',
     isLoggedIn: false,
-    email: '',
     name: '',
 }
 
@@ -43,12 +41,12 @@ export const userStore = create<UserStore>((set) => {
         updateJwt: (jwt: JwtToken) => {
             set((state) => {
                 const newData = {
-                    ...state,
+                    ...state.user,
                     ...jwt
                 }
 
                 setLocalStorage(AuthStoreKey, newData)
-                return newData
+                return {...state, user: newData}
             })
         }
     }

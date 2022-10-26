@@ -19,7 +19,7 @@ import (
 )
 
 func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
-	loggerImp := customLogger.NewSimpleLogger("GOBR", os.Stderr)
+	loggerImp := customLogger.NewSimpleLogger("GOBR", os.Stdout)
 	hubManager := events.NewHubManagerImpl(loggerImp)
 
 	db, err := gorm.Open(postgres.Open(opt.PostgresConnectionString), &gorm.Config{

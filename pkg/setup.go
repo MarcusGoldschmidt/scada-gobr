@@ -76,11 +76,9 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 
 	scada.setRouters()
 
-	if !opt.DevMode {
-		err = scadaServer.SetupSpa(scada.router)
-		if err != nil {
-			return nil, err
-		}
+	err = scadaServer.SetupSpa(scada.router)
+	if err != nil {
+		return nil, err
 	}
 
 	scada.server = &http.Server{

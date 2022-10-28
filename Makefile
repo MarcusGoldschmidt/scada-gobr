@@ -1,12 +1,12 @@
 GO ?= go
 GOPATH ?= $(shell go env GOPATH)
 
-api: install-dev build-api clean
+api: install-dev build-api
 
 install-dev:
 	go mod download;
 	cd scadagobr-client; \
-    	npm i
+    	yarn
 
 generate:
 	go generate pkg/server/api.go
@@ -16,7 +16,7 @@ build-api: build-web generate
 
 build-web:
 	cd scadagobr-client; \
-	npm run build
+	VITE_EMBEDDED=true npm run build
 
 clean:
 	rm pkg/server/public -r

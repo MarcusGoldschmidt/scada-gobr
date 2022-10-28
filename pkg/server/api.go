@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-//go:generate cp -r ../../scadagobr-client/public ./public
+//go:generate cp -r ../../scadagobr-client/dist ./public
 //go:embed public
 var spa embed.FS
 
@@ -38,9 +38,17 @@ func SetupSpa(r *mux.Router) error {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusOK)
 
-			file, _ := files.Open("index.html")
+			file, err := files.Open("index.html")
+
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 
 			response, err := io.ReadAll(file)
+
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 
 			_, err = w.Write(response)
 			if err != nil {

@@ -22,5 +22,6 @@ clean:
 	rm pkg/server/public -r
 
 test:
+	mkdir ./pkg/server/public
 	go test ./...
 

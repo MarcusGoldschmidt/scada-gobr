@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"net/http"
+	"time"
 )
 
 func GetDataSourcesRuntime(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
@@ -24,7 +25,7 @@ func GetDataSourceTypesHandler(s *Scadagobr, w http.ResponseWriter, r *http.Requ
 func GetDataSourcesHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	sources, err := s.dataSourcePersistence.GetDadaSources(ctx)
+	sources, err := s.dataSourcePersistence.GetDataSources(ctx)
 	if err != nil {
 		s.respondError(w, err)
 		return
@@ -42,18 +43,13 @@ func GetDataSourcesHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request)
 }
 
 type createDataSource struct {
-	Name string         `json:"name"`
-	Data map[string]any `json:"data"`
+	Name string                `json:"name"`
+	Data map[string]any        `json:"data"`
+	Type models.DataSourceType `json:"type"`
 }
 
 func CreateDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
-	dataSourceId, err := uuid.Parse(mux.Vars(r)["id"])
-	if err != nil {
-		s.respondError(w, err)
-		return
-	}
 
 	command, err := server.ReadJson[createDataSource](r)
 	if err != nil {
@@ -61,16 +57,21 @@ func CreateDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	ds, err := s.dataSourcePersistence.GetDadaSourceById(ctx, dataSourceId)
+	existDataSource, err := s.dataSourcePersistence.GetDataSourceByName(ctx, command.Name)
 	if err != nil {
 		s.respondError(w, err)
+		return
+	}
+
+	if existDataSource != nil {
+		s.respondBadRequest(w, errors.New("datasource already exist"))
 		return
 	}
 
 	datasource := &models.DataSource{
 		Id:   uuid.New(),
 		Name: command.Name,
-		Type: ds.Type,
+		Type: command.Type,
 	}
 
 	err = parseDataSourceData(datasource, command.Data)
@@ -113,7 +114,7 @@ func EditDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	datasource, err := s.dataSourcePersistence.GetDadaSourceById(ctx, id)
+	datasource, err := s.dataSourcePersistence.GetDataSourceById(ctx, id)
 	if err != nil {
 		s.respondError(w, err)
 		return
@@ -130,6 +131,24 @@ func EditDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request)
 	s.respondJsonOk(w, command)
 }
 
+func DeleteDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id, err := uuid.Parse(mux.Vars(r)["id"])
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
+	err = s.dataSourcePersistence.DeleteDataSource(ctx, id)
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func parseDataSourceData(dataSource *models.DataSource, data map[string]any) error {
 	var marshal []byte
 	var err error
@@ -142,7 +161,19 @@ func parseDataSourceData(dataSource *models.DataSource, data map[string]any) err
 	case models.HttpServer:
 		marshal, err = shared.ValidateDataSourceType[models.DataSourceTypeHttpServer](data)
 	case models.RandomValue:
-		marshal, err = shared.ValidateDataSourceType[models.DataSourceTypeRandomValue](data)
+		if value, ok := data["period"].(string); ok {
+			duration, err := time.ParseDuration(value)
+
+			if err != nil {
+				return err
+			}
+
+			model := models.DataSourceTypeRandomValue{
+				Period: duration,
+			}
+
+			marshal, err = json.Marshal(model)
+		}
 	default:
 		err = errors.New("unknown datasource type")
 	}

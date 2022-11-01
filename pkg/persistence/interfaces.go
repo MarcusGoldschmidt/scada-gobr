@@ -35,8 +35,10 @@ type DataPointPersistence interface {
 }
 
 type DataSourcePersistence interface {
-	GetDadaSourceById(ctx context.Context, id shared.CommonId) (*models.DataSource, error)
-	GetDadaSources(ctx context.Context) ([]*models.DataSource, error)
+	GetDataSourceById(ctx context.Context, id shared.CommonId) (*models.DataSource, error)
+	GetDataSources(ctx context.Context) ([]*models.DataSource, error)
+
+	GetDataSourceByName(ctx context.Context, name string) (*models.DataSource, error)
 
 	GetDataPoints(ctx context.Context, id shared.CommonId) ([]*models.DataPoint, error)
 

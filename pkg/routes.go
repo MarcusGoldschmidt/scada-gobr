@@ -59,6 +59,7 @@ func (s *Scadagobr) setRouters() {
 	s.get("/api/v1/datasource", s.authAndIsAdminMiddleware(GetDataSourcesHandler))
 	s.post("/api/v1/datasource", s.authAndIsAdminMiddleware(CreateDataSourceHandler))
 	s.put("/api/v1/datasource/{id}", s.authAndIsAdminMiddleware(EditDataSourceHandler))
+	s.delete("/api/v1/datasource/{id}", s.authAndIsAdminMiddleware(DeleteDataSourceHandler))
 
 	// DataPoints
 	s.get("/api/v1/datapoint/{id}", s.authAndIsAdminMiddleware(GetDataPointByIdHandler))

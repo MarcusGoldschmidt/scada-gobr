@@ -2,6 +2,7 @@ package gorm
 
 import (
 	"context"
+	"errors"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"gorm.io/gorm"
@@ -9,6 +10,23 @@ import (
 
 type DataSourcePersistenceGormImpl struct {
 	db *gorm.DB
+}
+
+func (d DataSourcePersistenceGormImpl) GetDataSourceByName(ctx context.Context, name string) (*models.DataSource, error) {
+	db := d.db.WithContext(ctx)
+
+	var data *models.DataSource
+	result := db.Model(&data).Where("name = ?", name).First(&data)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
+		return nil, result.Error
+	}
+
+	return data, nil
 }
 
 func (d DataSourcePersistenceGormImpl) GetDataPoints(ctx context.Context, id shared.CommonId) ([]*models.DataPoint, error) {
@@ -38,12 +56,12 @@ func NewDataSourcePersistenceGormImpl(db *gorm.DB) *DataSourcePersistenceGormImp
 	return &DataSourcePersistenceGormImpl{db: db}
 }
 
-func (d DataSourcePersistenceGormImpl) GetDadaSourceById(ctx context.Context, id shared.CommonId) (*models.DataSource, error) {
+func (d DataSourcePersistenceGormImpl) GetDataSourceById(ctx context.Context, id shared.CommonId) (*models.DataSource, error) {
 	db := d.db.WithContext(ctx)
 	return getById[models.DataSource](db, id)
 }
 
-func (d DataSourcePersistenceGormImpl) GetDadaSources(ctx context.Context) ([]*models.DataSource, error) {
+func (d DataSourcePersistenceGormImpl) GetDataSources(ctx context.Context) ([]*models.DataSource, error) {
 	db := d.db.WithContext(ctx)
 
 	var data []*models.DataSource

@@ -6,7 +6,7 @@ import (
 )
 
 func LoadDataSourcesRuntimeManager(ctx context.Context, s *Scadagobr) ([]datasources.DataSourceRuntimeManager, error) {
-	ds, err := s.dataSourcePersistence.GetDadaSources(ctx)
+	ds, err := s.dataSourcePersistence.GetDataSources(ctx)
 
 	if err != nil {
 		return nil, err

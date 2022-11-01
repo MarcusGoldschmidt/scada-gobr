@@ -14,6 +14,10 @@ type InMemoryPersistence struct {
 	dataPoints map[shared.CommonId]*models.DataPoint
 }
 
+func NewInMemoryPersistence() *InMemoryPersistence {
+	return &InMemoryPersistence{series: make(map[shared.CommonId][]*models.DataSeries)}
+}
+
 func (f *InMemoryPersistence) GetGroupNameByDataPointId(ctx context.Context, datapointId shared.CommonId) (string, error) {
 	//TODO implement me
 	panic("implement me")
@@ -72,17 +76,17 @@ func (f *InMemoryPersistence) GetAllDataPoints(ctx context.Context) ([]*models.D
 	return dataPoints, nil
 }
 
-func (f InMemoryPersistence) UpdateDataPoint(ctx context.Context, dataPoint *models.DataPoint) error {
+func (f *InMemoryPersistence) UpdateDataPoint(ctx context.Context, dataPoint *models.DataPoint) error {
 	f.dataPoints[dataPoint.Id] = dataPoint
 	return nil
 }
 
-func (f InMemoryPersistence) DeleteDataPoint(ctx context.Context, dataSourceId shared.CommonId, dataPointId shared.CommonId) error {
+func (f *InMemoryPersistence) DeleteDataPoint(ctx context.Context, dataSourceId shared.CommonId, dataPointId shared.CommonId) error {
 	delete(f.dataPoints, dataPointId)
 	return nil
 }
 
-func (f InMemoryPersistence) AddDataPointValues(ctx context.Context, values []*models.DataSeries) error {
+func (f *InMemoryPersistence) AddDataPointValues(ctx context.Context, values []*models.DataSeries) error {
 	for _, value := range values {
 		err := f.AddDataPointValue(ctx, value.DataPointId, &shared.Series{
 			Value:     value.Value,
@@ -95,7 +99,7 @@ func (f InMemoryPersistence) AddDataPointValues(ctx context.Context, values []*m
 	return nil
 }
 
-func (f InMemoryPersistence) GetPointValues(ctx context.Context, id shared.CommonId, begin time.Time, end time.Time) ([]*shared.Series, error) {
+func (f *InMemoryPersistence) GetPointValues(ctx context.Context, id shared.CommonId, begin time.Time, end time.Time) ([]*shared.Series, error) {
 	result := make([]*shared.Series, 0)
 
 	//Filter by period
@@ -108,11 +112,7 @@ func (f InMemoryPersistence) GetPointValues(ctx context.Context, id shared.Commo
 	return result, nil
 }
 
-func NewInMemoryPersistence() *InMemoryPersistence {
-	return &InMemoryPersistence{series: make(map[shared.CommonId][]*models.DataSeries)}
-}
-
-func (f InMemoryPersistence) AddDataPointValue(ctx context.Context, id shared.CommonId, value *shared.Series) error {
+func (f *InMemoryPersistence) AddDataPointValue(ctx context.Context, id shared.CommonId, value *shared.Series) error {
 	series := models.NewDataSeries(value.Timestamp, value.Value, id)
 
 	if f.series[id] == nil {

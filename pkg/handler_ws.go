@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"errors"
-	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/events/topics"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/server/wshandler"
 	"github.com/google/uuid"
@@ -55,8 +55,8 @@ func GetWsTimeSeriesViewComponent(s *Scadagobr, w http.ResponseWriter, r *http.R
 			return
 		}
 		client := wshandler.NewDataPointHubClient(parse, conn, mutex)
-		s.HubManager.AddClient(ctx, events.DataSeriesInserter+parse.String(), client)
-		defer s.HubManager.RemoveClient(events.DataSeriesInserter+parse.String(), client)
+		s.HubManager.AddClient(ctx, topics.DataSeriesInserter+parse.String(), client)
+		defer s.HubManager.RemoveClient(topics.DataSeriesInserter+parse.String(), client)
 	}
 
 	<-ctx.Done()

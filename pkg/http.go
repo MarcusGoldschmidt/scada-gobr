@@ -30,6 +30,10 @@ func (s *Scadagobr) respondJson(w http.ResponseWriter, status int, payload inter
 	}
 }
 
+func (s *Scadagobr) respondBadRequest(w http.ResponseWriter, err error) {
+	s.respondJson(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+}
+
 func (s *Scadagobr) respondError(w http.ResponseWriter, err error) {
 	if _, ok := err.(*validator.InvalidValidationError); ok {
 		s.respondJson(w, http.StatusBadRequest, map[string]string{"error": err.Error()})

@@ -33,12 +33,13 @@ type Manager struct {
 
 func NewRuntimeManager(logger logger.Logger, persistence persistence.DataPointPersistence) *Manager {
 	return &Manager{
-		Logger:       logger,
-		mutex:        sync.RWMutex{},
-		dataSources:  make(map[shared.CommonId]datasources.DataSourceRuntimeManager),
-		persistence:  persistence,
-		timeProvider: providers.UtcTimeProvider{},
-		options:      ManagerOptions{MaxRuntimeRetry: 5},
+		Logger:          logger,
+		mutex:           sync.RWMutex{},
+		dataSources:     make(map[shared.CommonId]datasources.DataSourceRuntimeManager),
+		persistence:     persistence,
+		timeProvider:    providers.UtcTimeProvider{},
+		options:         ManagerOptions{MaxRuntimeRetry: 5},
+		dataSourcesLogs: make(map[shared.CommonId]*buffers.MaxBuffer),
 	}
 }
 

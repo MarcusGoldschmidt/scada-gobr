@@ -72,7 +72,7 @@ func CreateDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	ds, err := s.dataSourcePersistence.GetDadaSourceById(ctx, id)
+	ds, err := s.dataSourcePersistence.GetDataSourceById(ctx, id)
 	if err != nil {
 		s.respondError(w, err)
 		return

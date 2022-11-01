@@ -3,6 +3,7 @@ package gorm
 import (
 	"context"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/events/topics"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
@@ -51,7 +52,7 @@ WHERE data_points.id = ?
 	return group, response.Error
 }
 
-func (d DataPointPersistenceGormImpl) GetPointValuesByIds(ctx context.Context, id []shared.CommonId, begin time.Time, end time.Time) ([]*persistence.SeriesGroupIdentifier, error) {
+func (d *DataPointPersistenceGormImpl) GetPointValuesByIds(ctx context.Context, id []shared.CommonId, begin time.Time, end time.Time) ([]*persistence.SeriesGroupIdentifier, error) {
 	db := d.db.WithContext(ctx)
 
 	query := `
@@ -71,37 +72,37 @@ WHERE data_point_id IN (?) AND timestamp > ? AND timestamp < ?
 	return values, response.Error
 }
 
-func (d DataPointPersistenceGormImpl) DeleteDataPointValueByPeriod(ctx context.Context, id shared.CommonId, begin time.Time, end time.Time) error {
+func (d *DataPointPersistenceGormImpl) DeleteDataPointValueByPeriod(ctx context.Context, id shared.CommonId, begin time.Time, end time.Time) error {
 	db := d.db.WithContext(ctx)
 	return db.Delete(&models.DataSeries{}, "time > ? AND ? > time AND data_point_id = ?", begin, end, id).Error
 }
 
-func (d DataPointPersistenceGormImpl) GetAllDataPoints(ctx context.Context) ([]*models.DataPoint, error) {
+func (d *DataPointPersistenceGormImpl) GetAllDataPoints(ctx context.Context) ([]*models.DataPoint, error) {
 	db := d.db.WithContext(ctx)
 	return listAll[models.DataPoint](db)
 }
 
-func (d DataPointPersistenceGormImpl) CreateDataPoint(ctx context.Context, dataPoint *models.DataPoint) error {
+func (d *DataPointPersistenceGormImpl) CreateDataPoint(ctx context.Context, dataPoint *models.DataPoint) error {
 	db := d.db.WithContext(ctx)
 	return db.Create(dataPoint).Error
 }
 
-func (d DataPointPersistenceGormImpl) GetDataPointById(ctx context.Context, id shared.CommonId) (*models.DataPoint, error) {
+func (d *DataPointPersistenceGormImpl) GetDataPointById(ctx context.Context, id shared.CommonId) (*models.DataPoint, error) {
 	db := d.db.WithContext(ctx)
 	return getById[models.DataPoint](db, id)
 }
 
-func (d DataPointPersistenceGormImpl) UpdateDataPoint(ctx context.Context, dataPoint *models.DataPoint) error {
+func (d *DataPointPersistenceGormImpl) UpdateDataPoint(ctx context.Context, dataPoint *models.DataPoint) error {
 	db := d.db.WithContext(ctx)
 	return db.Save(dataPoint).Error
 }
 
-func (d DataPointPersistenceGormImpl) DeleteDataPoint(ctx context.Context, dataSourceId shared.CommonId, dataPointId shared.CommonId) error {
+func (d *DataPointPersistenceGormImpl) DeleteDataPoint(ctx context.Context, dataSourceId shared.CommonId, dataPointId shared.CommonId) error {
 	db := d.db.WithContext(ctx)
 	return db.Delete(&models.DataPoint{Id: dataPointId, DataSourceId: dataSourceId}).Error
 }
 
-func (d DataPointPersistenceGormImpl) AddDataPointValue(ctx context.Context, id shared.CommonId, value *shared.Series) error {
+func (d *DataPointPersistenceGormImpl) AddDataPointValue(ctx context.Context, id shared.CommonId, value *shared.Series) error {
 	db := d.db.WithContext(ctx)
 
 	dataSeries := models.NewDataSeries(value.Timestamp, value.Value, id)
@@ -117,7 +118,7 @@ func (d DataPointPersistenceGormImpl) AddDataPointValue(ctx context.Context, id 
 	return nil
 }
 
-func (d DataPointPersistenceGormImpl) AddDataPointValues(ctx context.Context, values []*models.DataSeries) error {
+func (d *DataPointPersistenceGormImpl) AddDataPointValues(ctx context.Context, values []*models.DataSeries) error {
 	db := d.db.WithContext(ctx)
 	err := db.Create(&values).Error
 
@@ -130,7 +131,7 @@ func (d DataPointPersistenceGormImpl) AddDataPointValues(ctx context.Context, va
 	return nil
 }
 
-func (d DataPointPersistenceGormImpl) GetPointValues(ctx context.Context, id shared.CommonId, begin time.Time, end time.Time) ([]*shared.Series, error) {
+func (d *DataPointPersistenceGormImpl) GetPointValues(ctx context.Context, id shared.CommonId, begin time.Time, end time.Time) ([]*shared.Series, error) {
 	db := d.db.WithContext(ctx)
 
 	var values []*shared.Series
@@ -149,6 +150,6 @@ func (d *DataPointPersistenceGormImpl) sendNotificationSeriesCreated(ctx context
 
 		event := persistence.NewSeriesGroupIdentifier(data.Timestamp, data.Value, groupName)
 
-		d.hubManager.SendMessage(events.DataSeriesInserter+data.DataPointId.String(), event)
+		d.hubManager.SendMessage(ctx, topics.DataSeriesInserter+data.DataPointId.String(), event)
 	}
 }

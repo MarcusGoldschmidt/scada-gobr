@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var ErrUnauthorized error = errors.New("Unauthorized")
+var ErrUnauthorized error = errors.New("unauthorized")
 var ContextClaimsKey string = "CLAIMS"
 
 func GetUserFromContext(ctx context.Context) (*Claims, error) {

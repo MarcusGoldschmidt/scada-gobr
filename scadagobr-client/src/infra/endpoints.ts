@@ -22,7 +22,7 @@ export const PathsV1 = {
     // DataSources
     DataSourceGet: 'api/v1/datasource',
     DataSourceCreate: 'api/v1/datasource',
-    DataSourceDelete: 'api/v1/datasource/',
+    DataSourceDelete: (dataPointId: string) => `/api/v1/datasource/${dataPointId}`,
     DataSourceUpdate: 'api/v1/datasource/',
     DataSourceGetById: 'api/v1/datasource/',
     // DataPoints

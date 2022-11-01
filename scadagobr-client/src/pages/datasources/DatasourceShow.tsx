@@ -1,11 +1,30 @@
 import useDataSources from "../../core/hooks/useDataSources";
-import {Button, Col, Row, Space, Typography} from "antd";
+import {Col, Modal, Row, Space, Typography} from "antd";
 import Column from "antd/es/table/Column";
 import AppTable from "../../infra/components/AppTable";
 import {AppButton} from "../../components/button/AppButton";
+import {useNavigate} from "react-location";
+import {ExclamationCircleOutlined} from "@ant-design/icons";
+import {userStore} from "../../core/stores/userStore";
+import {openNotificationWithIcon} from "../../infra/notification";
+import React from "react";
+import useDeleteDatasource from "../../core/hooks/useDeleteDatasource";
+
+const deleteDataSource = (mutator: any, id: string) => {
+    Modal.confirm({
+        icon: <ExclamationCircleOutlined/>,
+        content: 'Are you sure you want to delete this datasource?',
+        onOk() {
+            mutator(id)
+        }
+    });
+}
 
 function DatasourceShow() {
     const data = useDataSources();
+    const navigate = useNavigate();
+
+    const {mutate, isLoading} = useDeleteDatasource();
 
     return (
         <>
@@ -14,7 +33,7 @@ function DatasourceShow() {
                     <Typography.Title>Datasources</Typography.Title>
                 </Col>
                 <Col span={12} style={{textAlign: `right`}}>
-                    <AppButton type="primary" size="middle">
+                    <AppButton type="primary" size="middle" onClick={() => navigate({to: "/datasource/create"})}>
                         Add Datasource
                     </AppButton>
                 </Col>
@@ -23,15 +42,15 @@ function DatasourceShow() {
             <AppTable
                 {...data}
             >
-                <Column title="Name" dataIndex="name" key="name" />
-                <Column title="Type" dataIndex="type" key="type" />
+                <Column title="Name" dataIndex="name" key="name"/>
+                <Column title="Type" dataIndex="type" key="type"/>
                 <Column
                     title="Action"
                     key="action"
                     render={(_: any, record: any) => (
                         <Space size="middle">
                             <a>Invite {record.id}</a>
-                            <a>Delete</a>
+                            <a onClick={() => deleteDataSource(mutate, record.id)}>Delete</a>
                         </Space>
                     )}
                 />

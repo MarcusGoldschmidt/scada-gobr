@@ -8,58 +8,42 @@ import {
 } from 'react-query'
 import {openNotificationWithIcon} from "../notification";
 
-interface Error {
-    errors: Record<string, string>[]
-    type: string
-    title: string
-    status: number
-    detail: string
+interface multipleErrors {
+    errors: Record<string, string>
 }
 
-export const getErrorDetails = (error: Error) => {
-    if (error?.status === 400) {
-        return error?.errors
+interface singleError {
+    error: string
+}
+
+type Error = multipleErrors | singleError
+
+export const notifyError = (error: any) => {
+    const errorDetails = error as Error
+
+    if ('errors' in errorDetails) {
+        Object.keys(errorDetails.errors).forEach(key => {
+            openNotificationWithIcon({message: errorDetails.errors[key]}, 'error')
+        })
     }
 
-    return 'Server error'
+    if ('error' in errorDetails) {
+        openNotificationWithIcon({message: errorDetails.error}, 'error')
+    }
 }
 
 export const reactQueryClient = new QueryClient({
     mutationCache: new MutationCache({
         onError: error => {
             if (axios.isAxiosError(error)) {
-                const errorDetails = getErrorDetails(error?.response?.data as Error)
-                if (typeof errorDetails === 'string') {
-                    openNotificationWithIcon({
-                        message: errorDetails,
-                    }, 'error')
-                } else {
-                    errorDetails.forEach(error => {
-                        openNotificationWithIcon({
-                            message: error.error,
-                        }, 'error')
-                    })
-                }
+                notifyError(error?.response?.data)
             }
         }
     }),
     queryCache: new QueryCache({
         onError: (error: unknown) => {
             if (axios.isAxiosError(error)) {
-                const errorDetails = getErrorDetails(error?.response?.data as Error)
-                if (typeof errorDetails === 'string') {
-                    openNotificationWithIcon({
-                        message: errorDetails,
-                    }, 'error')
-                } else {
-                    errorDetails.forEach(error => {
-                        errorDetails.forEach(error => {
-                            openNotificationWithIcon({
-                                message: error.error,
-                            }, 'error')
-                        })
-                    })
-                }
+                notifyError(error?.response?.data)
             }
         }
     }),

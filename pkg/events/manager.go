@@ -14,9 +14,14 @@ type HubClient interface {
 	Execute(ctx context.Context, message any) error
 }
 
+type message struct {
+	ctx     context.Context
+	message any
+}
+
 type HubManager interface {
 	ShutDown(ctx context.Context)
-	SendMessage(topic string, data any)
+	SendMessage(ctx context.Context, topic string, data any)
 	AddClient(ctx context.Context, topic string, client HubClient)
 	RemoveClient(topic string, client HubClient)
 	CreateTopic(topicName string)
@@ -42,11 +47,11 @@ func (hm *HubManagerImpl) ShutDown(ctx context.Context) {
 	hm.topics = map[string]*Hub{}
 }
 
-func (hm *HubManagerImpl) SendMessage(topic string, data any) {
+func (hm *HubManagerImpl) SendMessage(ctx context.Context, topic string, data any) {
 	if hub, ok := hm.topics[topic]; ok {
 		hub := hub
 		go func() {
-			hub.broadcast <- data
+			hub.broadcast <- message{ctx, data}
 		}()
 	}
 }
@@ -75,7 +80,7 @@ type Hub struct {
 	clients map[HubClient]bool
 
 	// Inbound messages from the clients.
-	broadcast chan any
+	broadcast chan message
 
 	// Register requests from the clients.
 	register chan HubClient
@@ -97,7 +102,7 @@ func NewHub(logger logger.Logger, bufferSize ...int) *Hub {
 
 	return &Hub{
 		lock:       sync.RWMutex{},
-		broadcast:  make(chan any, size),
+		broadcast:  make(chan message, size),
 		clients:    map[HubClient]bool{},
 		register:   make(chan HubClient),
 		unregister: make(chan HubClient),
@@ -127,7 +132,7 @@ func (h *Hub) Run(ctx context.Context) {
 			for client := range h.clients {
 				client := client
 				go func() {
-					err := client.Execute(context.Background(), message)
+					err := client.Execute(message.ctx, message.message)
 					if err != nil {
 						h.logger.Errorf("Error executing client: %s", err)
 					}

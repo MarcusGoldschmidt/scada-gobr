@@ -5,6 +5,7 @@ import AppMenu from "../../components/AppMenu";
 import DatasourceShow from "../../pages/datasources/DatasourceShow";
 import UserShow from "../../pages/users/UserShow";
 import NotFound from "../../components/NotFound";
+import DatasourceInput from "../../pages/datasources/DatasourceInput";
 
 const reactLocation = new ReactLocation()
 
@@ -20,8 +21,21 @@ export default function AppRouter() {
                             element: <Home/>,
                         },
                         {
-                            path: '/datasource/',
-                            element: <DatasourceShow/>,
+                            path: 'datasource',
+                            children: [
+                                {
+                                    path: '/',
+                                    element: <DatasourceShow/>,
+                                },
+                                {
+                                    path: '/create',
+                                    element: <DatasourceInput/>,
+                                },
+                                {
+                                    path: '/:id/edit',
+                                    element: <DatasourceInput/>,
+                                },
+                            ]
                         },
                         {
                             path: '/user/',

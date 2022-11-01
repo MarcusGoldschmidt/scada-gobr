@@ -26,7 +26,7 @@ func (l *TestLogger) Tracef(s string, i ...interface{}) {
 // Errorf ...
 func (l *TestLogger) Errorf(f string, v ...interface{}) {
 	if l.LogLevel <= LogError {
-		l.Logger.Errorf("ERROR: "+f, v...)
+		l.Logger.Logf("ERROR: "+f, v...)
 	}
 }
 

@@ -21,3 +21,6 @@ build-web:
 clean:
 	rm pkg/server/public -r
 
+test:
+	go test ./...
+

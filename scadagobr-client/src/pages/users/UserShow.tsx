@@ -10,7 +10,6 @@ import {
 import {
     Link
 } from "react-location";
-import {userStore} from "../../core/stores/userStore";
 import {openNotificationWithIcon} from "../../infra/notification";
 import React from "react";
 

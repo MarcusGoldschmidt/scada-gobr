@@ -27,7 +27,7 @@ export interface UserStore {
 
 const AuthStoreKey = "CURRENT_USER"
 
-export const userStore = create<UserStore>((set) => {
+export const useUserStore = create<UserStore>((set) => {
     return {
         user: getLocalStorage<User>(AuthStoreKey) || defaultUser,
         setUser: (user: User) => {

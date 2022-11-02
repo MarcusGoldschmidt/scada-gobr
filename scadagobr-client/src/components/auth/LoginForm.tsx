@@ -3,7 +3,7 @@ import React from 'react';
 import {openNotificationWithIcon} from "../../infra/notification";
 import {axios} from "../../infra/axios";
 import {PathsV1} from "../../infra/endpoints";
-import {userStore} from "../../core/stores/userStore";
+import {useUserStore} from "../../core/stores/userStore";
 import {JwtToken} from "../../infra/response_types";
 
 const openNotification = () => {
@@ -20,7 +20,7 @@ const App: React.FC = () => {
     const onFinish = async (values: any) => {
         const {data} = await axios.post<JwtToken>(PathsV1.Login, values)
 
-        userStore.getState().setUser({
+        useUserStore.getState().setUser({
             ...data,
             isLoggedIn: true,
             name: values.username,

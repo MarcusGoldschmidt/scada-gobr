@@ -5,7 +5,7 @@ import AppTable from "../../infra/components/AppTable";
 import {AppButton} from "../../components/button/AppButton";
 import {useNavigate} from "react-location";
 import {ExclamationCircleOutlined} from "@ant-design/icons";
-import {userStore} from "../../core/stores/userStore";
+import {useUserStore} from "../../core/stores/userStore";
 import {openNotificationWithIcon} from "../../infra/notification";
 import React from "react";
 import useDeleteDatasource from "../../core/hooks/useDeleteDatasource";

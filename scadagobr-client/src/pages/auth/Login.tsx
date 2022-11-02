@@ -1,6 +1,9 @@
 import {Col, Row} from "antd";
 import LoginForm from "../../components/auth/LoginForm";
 import styled, {css} from "styled-components";
+import {useUserStore} from "../../core/stores/userStore";
+import {Navigate} from "react-location";
+import React from "react";
 
 const CenterForm = styled.div`
   margin-top: 30%;
@@ -17,6 +20,12 @@ const Title = styled.h1`
 `
 
 function App() {
+    const isLoggedIn = useUserStore(e => e.user.isLoggedIn)
+
+    if (isLoggedIn) {
+        return <Navigate to="/" />
+    }
+
     return (
         <Row>
             <Col lg={14} sm={0} style={{backgroundColor: "#284b63"}}></Col>

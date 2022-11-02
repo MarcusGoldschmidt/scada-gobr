@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import {useMenuStore} from "../core/stores/menuStore";
 
 function App() {
-    const [count, setCount] = useState(0)
+    const showMenu = useMenuStore(e => e.data.show);
+
+    const updateMenu = useMenuStore(state => state.setData)
 
     return (
-        <button onClick={() => setCount((count) => count + 1)}>
-            count is {count}
+        <button onClick={() => updateMenu({show: !showMenu})}>
+            Update Menu
         </button>
     )
 }

@@ -2,7 +2,7 @@ import {__API_URL__} from './env'
 import Axios, {AxiosRequestConfig} from 'axios'
 import {PathsV1} from "./endpoints";
 import {JwtToken} from "./response_types";
-import {userStore} from "../core/stores/userStore";
+import {useUserStore} from "../core/stores/userStore";
 
 const config: AxiosRequestConfig = {
     baseURL: __API_URL__,
@@ -18,7 +18,7 @@ axios.interceptors.request.use(async (config) => {
         !config.url?.endsWith(PathsV1.Login) &&
         !config.url?.endsWith(PathsV1.RefreshToken)
     ) {
-        const staticAuthStore = userStore.getState().user
+        const staticAuthStore = useUserStore.getState().user
         let userToken = staticAuthStore.token;
 
         const userTokenExpiration = new Date(+staticAuthStore.tokenExpiration * 1000);
@@ -32,10 +32,10 @@ axios.interceptors.request.use(async (config) => {
                     refreshToken
                 })
 
-                userStore.getState().updateJwt(data)
+                useUserStore.getState().updateJwt(data)
                 userToken = data.token
             }catch (e) {
-                userStore.getState().unSetUser()
+                useUserStore.getState().unSetUser()
             }
         }
 

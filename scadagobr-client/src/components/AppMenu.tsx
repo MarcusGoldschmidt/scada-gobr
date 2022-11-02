@@ -1,23 +1,21 @@
 import {
-    DesktopOutlined,
-    FileOutlined,
-    PieChartOutlined,
-    TeamOutlined,
     DatabaseOutlined,
-    LogoutOutlined,
+    DesktopOutlined,
+    ExclamationCircleOutlined,
     FundViewOutlined,
-    ExclamationCircleOutlined
+    LogoutOutlined,
+    PieChartOutlined,
+    TeamOutlined
 } from '@ant-design/icons';
 import type {MenuProps} from 'antd';
-import {Layout, Menu} from 'antd';
-import React, {useState} from 'react';
+import {Layout, Menu, Modal} from 'antd';
+import React from 'react';
 import {Colors} from "../core/colors";
 import styled from "styled-components";
-import {userStore} from "../core/stores/userStore";
-import {Button, Modal} from 'antd';
+import {useUserStore} from "../core/stores/userStore";
 import {openNotificationWithIcon} from "../infra/notification"
-import {BuildNextOptions, DefaultGenerics, useNavigate} from 'react-location';
-import {NavigateOptions} from "react-location/src";
+import {useNavigate} from 'react-location';
+import {useMenuStore} from "../core/stores/menuStore";
 
 const {Header, Content, Sider} = Layout;
 
@@ -68,7 +66,7 @@ const onMenuClick = (item: MenuItem, navigate: any) => {
                 icon: <ExclamationCircleOutlined/>,
                 content: 'Are you sure you want to logout?',
                 onOk() {
-                    userStore.getState().unSetUser();
+                    useUserStore.getState().unSetUser();
                     openNotificationWithIcon({message: "Successfully Logged out"}, `info`);
                 }
             });
@@ -86,13 +84,21 @@ const Logo = styled.h1`
 `
 
 const AppMenu: React.FC<{ children: React.ReactNode }> = ({children}) => {
-    const [collapsed, setCollapsed] = useState(false);
-
     const navigate = useNavigate();
+
+    const isLoggedIn = useUserStore(e => e.user.isLoggedIn)
+
+    const {collapsed, show} = useMenuStore(e => e.data)
+
+    const updateMenu = useMenuStore(e => e.setData)
+
+    if (!isLoggedIn || !show) {
+        return <>{children}</>
+    }
 
     return (
         <Layout style={{minHeight: '100vh'}}>
-            <Sider collapsible collapsed={collapsed} onCollapse={value => setCollapsed(value)}>
+            <Sider collapsible collapsed={collapsed} onCollapse={value => updateMenu({collapsed: value})}>
                 {collapsed ? <Logo>GO</Logo> : <Logo>GOBR</Logo>}
                 <Menu selectable={false} onClick={(e) => onMenuClick(e, navigate)} theme="dark" mode="inline"
                       items={items}/>

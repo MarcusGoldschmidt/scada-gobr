@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"io"
 )
@@ -44,7 +45,7 @@ func (l *SimpleLogger) Tracef(s string, i ...interface{}) {
 // Errorf ...
 func (l *SimpleLogger) Errorf(f string, v ...interface{}) {
 	if l.LogLevel <= LogError {
-		l.Logger.Errorf(f, v...)
+		l.Logger.Errorf(util.FileWithLineNum()+" "+f, v...)
 	}
 }
 

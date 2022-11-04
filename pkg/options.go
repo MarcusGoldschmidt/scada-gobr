@@ -21,16 +21,19 @@ type ScadagobrOptions struct {
 	DevMode                  bool
 	TLSConfig                *tls.Config
 	PostgresConnectionString string
-	timezone                 string
 
 	// Jwt
-	expiration        time.Duration
-	refreshExpiration time.Duration
-	refreshKey        []byte
-	key               []byte
+	Expiration        time.Duration
+	RefreshExpiration time.Duration
+	RefreshKey        []byte
+	Key               []byte
 
 	// Shutdown 30 seconds
 	ShutdownWait time.Duration
+
+	// must populate location
+	Timezone string
+	Location *time.Location
 }
 
 func DefaultOptions() *ScadagobrOptions {
@@ -43,31 +46,16 @@ func DefaultOptions() *ScadagobrOptions {
 		MetricsServer:            true,
 		DevMode:                  false,
 		AdminPassword:            "admin",
-		PostgresConnectionString: "scadagobr",
-		refreshExpiration:        15 * 24 * time.Hour,
-		expiration:               15 * time.Minute,
+		AdminEmail:               "admin@localhost",
+		PostgresConnectionString: "host=localhost user=postgres password=postgres port=5432",
+		RefreshExpiration:        15 * 24 * time.Hour,
+		Expiration:               15 * time.Minute,
 		ShutdownWait:             30 * time.Second,
+		Timezone:                 time.UTC.String(),
 	}
-}
-
-func ConfigureFlags(configFile ...string) error {
-
-	viper.SetDefault("postgresConnectionString", "host=localhost user=postgres password=postgres port=5432")
-
-	viper.SetConfigName("scadagobr")
-
-	if len(configFile) != 0 {
-		file := configFile[0]
-		viper.SetConfigFile(file)
-	}
-
-	viper.AutomaticEnv()
-
-	return nil
 }
 
 func ParseOptions() (*ScadagobrOptions, error) {
-
 	options := DefaultOptions()
 
 	mtls := viper.GetBool("mtls")
@@ -75,7 +63,24 @@ func ParseOptions() (*ScadagobrOptions, error) {
 	pkey := viper.GetString("pkey")
 	clientcas := viper.GetString("clientcas")
 
-	postgresConnectionString := viper.GetString("postgresConnectionString")
+	options.Address = viper.GetString("address")
+	options.Port = viper.GetInt("port")
+	options.Logfile = viper.GetString("logfile")
+	options.MaxRecvMsgSize = viper.GetInt("maxRecvMsgSize")
+	options.MetricsServer = viper.GetBool("metricsServer")
+	options.DevMode = viper.GetBool("devMode")
+	options.AdminPassword = viper.GetString("adminPassword")
+	options.RefreshExpiration = viper.GetDuration("refreshExpiration")
+	options.Expiration = viper.GetDuration("expiration")
+	options.ShutdownWait = viper.GetDuration("shutdownWait")
+	options.PostgresConnectionString = viper.GetString("postgresConnectionString")
+
+	location, err := time.LoadLocation(viper.GetString("timezone"))
+	if err != nil {
+		return nil, err
+	}
+
+	options.Location = location
 
 	tlsConfig, err := setUpTLS(pkey, certificate, clientcas, mtls)
 	if err != nil {
@@ -84,18 +89,16 @@ func ParseOptions() (*ScadagobrOptions, error) {
 
 	options.TLSConfig = tlsConfig
 
-	options.PostgresConnectionString = postgresConnectionString
-
 	return options, nil
 }
 
 func SetupJwtHandler(opt *ScadagobrOptions, persistence persistence.UserPersistence) *auth.JwtHandler {
 	handler := &auth.JwtHandler{
-		Key:               opt.key,
-		Expiration:        opt.expiration,
-		RefreshExpiration: opt.refreshExpiration,
-		RefreshKey:        opt.refreshKey,
-		TimeProvider:      providers.TimeProviderFromTimeZone(opt.timezone),
+		Key:               opt.Key,
+		Expiration:        opt.Expiration,
+		RefreshExpiration: opt.RefreshExpiration,
+		RefreshKey:        opt.RefreshKey,
+		TimeProvider:      providers.TimeProviderFromTimeZone(opt.Location),
 		UserPersistence:   persistence,
 	}
 

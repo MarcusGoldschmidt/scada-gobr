@@ -15,7 +15,6 @@ func DataPointToRuntimeFunc[T any](dp *models.DataPoint, cb func(*datasources.Da
 }
 
 func DataPointToRuntimeSql(dp *models.DataPoint) (*datasources.SqlDataPoint, error) {
-
 	fun := func(common *datasources.DataPointCommon, data *models.DataPoint) (*datasources.SqlDataPoint, error) {
 		dsTypeData, err := shared.FromJson[models.DataPointTypeSql](dp.Data)
 
@@ -75,8 +74,9 @@ func DataPointToRuntimeHttpServer(dp *models.DataPoint) (*datasources.HttpServer
 
 func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (datasources.DataSourceRuntimeManager, error) {
 	logger := scada.RuntimeManager.CreateLogger(ds.Id, ds.Name)
-
 	runtimeManager := datasources.NewDataSourceRuntimeManagerCommon(ds.Id, ds.Name, logger)
+
+	ds.FilterAvailableDataPoints()
 
 	var worker datasources.DataSourceWorker
 

@@ -30,7 +30,9 @@ func NewGormLogger() *GormLogger {
 
 	return &GormLogger{
 		Logger:                logger,
-		SkipErrRecordNotFound: false,
+		SkipErrRecordNotFound: true,
+		SlowThreshold:         time.Second,
+		SourceField:           "",
 	}
 }
 

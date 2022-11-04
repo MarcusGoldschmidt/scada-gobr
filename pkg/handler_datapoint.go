@@ -18,17 +18,17 @@ func GetDataPointByIdHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	points, err := s.dataPointPersistence.GetDataPointById(ctx, id)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
-	s.respondJsonOk(w, points)
+	s.respondJsonOk(ctx, w, points)
 }
 
 func GetDataPointsHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
@@ -36,17 +36,17 @@ func GetDataPointsHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	points, err := s.dataSourcePersistence.GetDataPoints(ctx, id)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
-	s.respondJsonOk(w, points)
+	s.respondJsonOk(ctx, w, points)
 }
 
 type createDataPoint struct {
@@ -62,19 +62,19 @@ func CreateDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	command, err := server.ValidateFromBody[createDataPoint](r)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	ds, err := s.dataSourcePersistence.GetDataSourceById(ctx, id)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
@@ -90,7 +90,7 @@ func CreateDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request
 
 	err = parseDataPointData(dataPoint, command.Data)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
@@ -101,17 +101,17 @@ func CreateDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request
 
 	err = s.UpdateDataSource(ctx, ds.Id)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	err = json.Unmarshal(dataPoint.Data, &dataPoint.TypeData)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
-	s.respondJsonOk(w, dataPoint)
+	s.respondJsonOk(ctx, w, dataPoint)
 }
 
 func EditDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
@@ -121,19 +121,19 @@ func EditDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 
 	id, err := uuid.Parse(vars["id"])
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	dataPointId, err := uuid.Parse(vars["dataPointId"])
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	claims, err := auth.GetUserFromContext(ctx)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
@@ -144,18 +144,18 @@ func EditDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 
 	command, err := server.ValidateFromBody[createDataPoint](r)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	dataPoint, err := s.dataPointPersistence.GetDataPointById(ctx, dataPointId)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	if dataPoint.DataSourceId != id {
-		s.respondError(w, errors.New("invalid data point id"))
+		s.respondError(ctx, w, errors.New("invalid data point id"))
 		return
 	}
 
@@ -166,7 +166,7 @@ func EditDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 
 	err = parseDataPointData(dataPoint, command.Data)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
@@ -177,23 +177,23 @@ func EditDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 
 	err = json.Unmarshal(dataPoint.Data, &dataPoint.TypeData)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	err = s.dataPointPersistence.UpdateDataPoint(ctx, dataPoint)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	err = s.UpdateDataSource(ctx, dataPoint.DataSourceId)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
-	s.respondJsonOk(w, dataPoint)
+	s.respondJsonOk(ctx, w, dataPoint)
 }
 
 func DeleteDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
@@ -203,19 +203,19 @@ func DeleteDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request
 
 	id, err := uuid.Parse(vars["id"])
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	dataPointId, err := uuid.Parse(vars["dataPointId"])
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	claims, err := auth.GetUserFromContext(ctx)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
@@ -226,19 +226,19 @@ func DeleteDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request
 
 	err = s.dataPointPersistence.DeleteDataPoint(ctx, id, dataPointId)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	err = s.UpdateDataSource(ctx, id)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	err = s.dataPointPersistence.DeleteDataPointValueById(ctx, dataPointId)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 

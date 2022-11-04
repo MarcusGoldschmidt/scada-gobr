@@ -1,5 +1,6 @@
 package topics
 
 const (
-	DataSeriesInserter = "dataseriesinserter:"
+	DataSeriesInserter    = "dataseriesinserter:"
+	RuntimeManagerUpdated = "runtimemanagerupdated"
 )

@@ -16,7 +16,6 @@ func (s *Scadagobr) LoadDataSourcesRuntimeManager(ctx context.Context) ([]dataso
 	dsrm := make([]datasources.DataSourceRuntimeManager, len(ds))
 
 	for i, d := range ds {
-
 		manager, err := DataSourceToRuntimeManager(s, d)
 		if err != nil {
 			return nil, err

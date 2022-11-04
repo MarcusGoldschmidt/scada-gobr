@@ -27,17 +27,17 @@ func GetUsersHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 
 	request, err := shared.NewPaginationRequest(r)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	users, err := s.userPersistence.GetUsers(ctx, request)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
-	s.respondJsonOk(w, users)
+	s.respondJsonOk(ctx, w, users)
 }
 
 func GetUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
@@ -46,13 +46,13 @@ func GetUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(mux.Vars(r)["id"])
 
 	if err != nil {
-		s.respondError(w, errors.New("id must be a uuid4"))
+		s.respondError(ctx, w, errors.New("id must be a uuid4"))
 		return
 	}
 
 	claims, err := auth.GetUserFromContext(ctx)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
@@ -63,10 +63,10 @@ func GetUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 
 	user, err := s.userPersistence.GetUserById(ctx, id)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
-	s.respondJsonOk(w, user)
+	s.respondJsonOk(ctx, w, user)
 }
 
 type CreateUserRequest struct {
@@ -95,26 +95,26 @@ func CreateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 
 	request, err := server.ValidateFromBody[CreateUserRequest](r)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	if *request.Email != "" {
 		err := server.Validate.Var(request.Email, "email")
 		if err != nil {
-			s.respondError(w, err)
+			s.respondError(ctx, w, err)
 			return
 		}
 	}
 
 	userName, err := s.userPersistence.GetUserByName(ctx, request.Name)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	if userName != nil {
-		s.respondError(w, errors.New("the username already in use"))
+		s.respondError(ctx, w, errors.New("the username already in use"))
 		return
 	}
 
@@ -122,11 +122,11 @@ func CreateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 
 	err = s.userPersistence.CreateUser(ctx, user)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
-	s.respondJson(w, http.StatusCreated, request)
+	s.respondJson(ctx, w, http.StatusCreated, request)
 }
 
 type UpdateUserRequest struct {
@@ -142,45 +142,45 @@ func UpdateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
-		s.respondError(w, errors.New("id must be a uuid4"))
+		s.respondError(ctx, w, errors.New("id must be a uuid4"))
 		return
 	}
 
 	claims, err := auth.GetUserFromContext(ctx)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	request, err := server.ValidateFromBody[UpdateUserRequest](r)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	if *request.Email != "" {
 		err := server.Validate.Var(request.Email, "email")
 		if err != nil {
-			s.respondError(w, err)
+			s.respondError(ctx, w, err)
 			return
 		}
 	}
 
 	user, err := s.userPersistence.GetUserById(ctx, id)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	valid, err := s.userPersistence.IsValidUsernameForUser(ctx, request.Name, user.ID)
 
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	if !valid {
-		s.respondError(w, errors.New("the username already in use"))
+		s.respondError(ctx, w, errors.New("the username already in use"))
 		return
 	}
 
@@ -199,11 +199,11 @@ func UpdateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 
 	err = s.userPersistence.UpdateUser(ctx, user)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
-	s.respondJsonOk(w, map[string]any{})
+	s.respondJsonOk(ctx, w, map[string]any{})
 }
 
 func DeleteUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
@@ -211,13 +211,13 @@ func DeleteUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
-		s.respondError(w, errors.New("id must be a uuid4"))
+		s.respondError(ctx, w, errors.New("id must be a uuid4"))
 		return
 	}
 
 	claims, err := auth.GetUserFromContext(ctx)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
@@ -227,15 +227,15 @@ func DeleteUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if id == claims.Id {
-		s.respondError(w, errors.New("cannot delete your own user"))
+		s.respondError(ctx, w, errors.New("cannot delete your own user"))
 		return
 	}
 
 	err = s.userPersistence.DeleteUser(ctx, id)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
-	s.respondJsonOk(w, map[string]any{})
+	s.respondJsonOk(ctx, w, map[string]any{})
 }

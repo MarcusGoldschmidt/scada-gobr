@@ -3,6 +3,7 @@ package runtime
 import (
 	"context"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/datasources"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence/in_memory"
 	"github.com/google/uuid"
@@ -14,7 +15,9 @@ import (
 func TestSimpleRuntime(t *testing.T) {
 	ctx := context.Background()
 
-	rt := NewRuntimeManager(logger.NewSimpleLogger("teste", os.Stdout), in_memory.NewInMemoryPersistence())
+	log := logger.NewSimpleLogger("teste", os.Stdout)
+
+	rt := NewRuntimeManager(log, in_memory.NewInMemoryPersistence(), events.NewHubManagerImpl(log))
 
 	testLogger := logger.NewTestLogger(t)
 
@@ -31,7 +34,11 @@ func TestSimpleRuntime(t *testing.T) {
 
 	rt.AddDataSourceManager(dsManager)
 
-	rt.RunAll(ctx)
+	err := rt.RunAll(ctx)
+	if err != nil {
+		t.Errorf("Error running runtime: %s", err)
+		return
+	}
 
 	<-time.After(5 * time.Second)
 

@@ -16,11 +16,11 @@ import (
 )
 
 func GetDataSourcesRuntime(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
-	s.respondJsonOk(w, s.RuntimeManager.GetAllDataSources())
+	s.respondJsonOk(r.Context(), w, s.RuntimeManager.GetAllDataSources())
 }
 
 func GetDataSourceTypesHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
-	s.respondJsonOk(w, datasources.DataSourceTypes)
+	s.respondJsonOk(r.Context(), w, datasources.DataSourceTypes)
 }
 
 func GetDataSourcesHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
@@ -28,19 +28,19 @@ func GetDataSourcesHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request)
 
 	sources, err := s.dataSourcePersistence.GetDataSources(ctx)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	for _, source := range sources {
 		err := json.Unmarshal(source.Data, &source.TypeData)
 		if err != nil {
-			s.respondError(w, err)
+			s.respondError(ctx, w, err)
 			return
 		}
 	}
 
-	s.respondJsonOk(w, sources)
+	s.respondJsonOk(ctx, w, sources)
 }
 
 func GetDataSourceByIdHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
@@ -48,23 +48,23 @@ func GetDataSourceByIdHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reque
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	datasource, err := s.dataSourcePersistence.GetDataSourceById(ctx, id)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	err = json.Unmarshal(datasource.Data, &datasource.TypeData)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
-	s.respondJsonOk(w, datasource)
+	s.respondJsonOk(ctx, w, datasource)
 }
 
 type createDataSource struct {
@@ -78,18 +78,18 @@ func CreateDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 
 	command, err := server.ReadJson[createDataSource](r)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	existDataSource, err := s.dataSourcePersistence.GetDataSourceByName(ctx, command.Name)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	if existDataSource != nil {
-		s.respondBadRequest(w, errors.New("datasource already exist"))
+		s.respondBadRequest(ctx, w, errors.New("datasource already exist"))
 		return
 	}
 
@@ -101,7 +101,7 @@ func CreateDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 
 	err = parseDataSourceData(datasource, command.Data)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
@@ -110,7 +110,7 @@ func CreateDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	s.respondJsonOk(w, command)
+	s.respondJsonOk(ctx, w, command)
 }
 
 func EditDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
@@ -118,13 +118,13 @@ func EditDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request)
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	claims, err := auth.GetUserFromContext(ctx)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
@@ -135,13 +135,13 @@ func EditDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request)
 
 	command, err := server.ReadJson[createDataSource](r)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	datasource, err := s.dataSourcePersistence.GetDataSourceById(ctx, id)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
@@ -149,11 +149,11 @@ func EditDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request)
 
 	err = parseDataSourceData(datasource, command.Data)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
-	s.respondJsonOk(w, command)
+	s.respondJsonOk(ctx, w, command)
 }
 
 func DeleteDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
@@ -161,20 +161,20 @@ func DeleteDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	datapoints, err := s.dataSourcePersistence.GetDataPoints(ctx, id)
 
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	err = s.dataSourcePersistence.DeleteDataSource(ctx, id)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 

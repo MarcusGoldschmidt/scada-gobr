@@ -17,6 +17,7 @@ type DataPoint struct {
 	Id           shared.CommonId      `json:"id" gorm:"type:uuid"`
 	DataSourceId shared.CommonId      `json:"dataSourceId"`
 	Name         string               `json:"name"`
+	Description  *string              `json:"description"`
 	IsEnable     bool                 `json:"isEnable"`
 	Unit         string               `json:"unit"`
 	PurgeAfter   *time.Duration       `json:"purgeAfter"`

@@ -70,6 +70,7 @@ type DataSourceRuntimeManager interface {
 	GetError() error
 
 	WithWorker(worker DataSourceWorker)
+	WithNotificationEachStatus(notify func(context.Context, DataSourceRuntimeManager))
 }
 
 type DataSourceRuntimeManagerCommon struct {
@@ -85,6 +86,8 @@ type DataSourceRuntimeManagerCommon struct {
 	confirmShutdown chan bool
 
 	logger logger.Logger
+
+	notify func(context.Context, DataSourceRuntimeManager)
 }
 
 func (c *DataSourceRuntimeManagerCommon) Id() shared.CommonId {
@@ -105,6 +108,21 @@ func (c *DataSourceRuntimeManagerCommon) Status() DataSourceStatus {
 
 func (c *DataSourceRuntimeManagerCommon) GetError() error {
 	return c.errorReason
+}
+
+func (c *DataSourceRuntimeManagerCommon) WithNotificationEachStatus(notify func(context.Context, DataSourceRuntimeManager)) {
+	c.notify = notify
+}
+
+func (c *DataSourceRuntimeManagerCommon) notifyUpdated(ctx context.Context) {
+	if c.notify != nil {
+		c.notify(ctx, c)
+	}
+}
+
+func (c *DataSourceRuntimeManagerCommon) updateStatus(ctx context.Context, status DataSourceStatus) {
+	c.status = status
+	c.notifyUpdated(ctx)
 }
 
 func (c *DataSourceRuntimeManagerCommon) Restart(ctx context.Context) error {
@@ -145,12 +163,12 @@ func (c *DataSourceRuntimeManagerCommon) Run(ctx context.Context) error {
 
 	if c.status == Running {
 		c.mutex.Unlock()
-		return fmt.Errorf("datasource %s with runtimeId: %s is aready running", c.id, c.runtimeId.String())
+		return fmt.Errorf("datasource '%s' %s with runtimeId: %s is already running", c.Name(), c.id, c.runtimeId.String())
 	}
 
 	c.confirmShutdown = make(chan bool)
 
-	c.status = Running
+	c.updateStatus(ctx, Running)
 
 	c.mutex.Unlock()
 
@@ -162,19 +180,19 @@ func (c *DataSourceRuntimeManagerCommon) Run(ctx context.Context) error {
 			return
 		case err, ok := <-errorChan:
 			if ok && err != nil {
-				c.status = Error
+				c.updateStatus(ctx, Error)
 				c.errorReason = err
-				c.logger.Errorf("Error in data source %s with runtimeId: %s: %s", c.id, c.runtimeId.String(), err.Error())
+				c.logger.Errorf("Error in data source '%s' %s with runtimeId: %s: %s", c.Name(), c.id, c.runtimeId.String(), err.Error())
 				c.shutdown()
 			}
 			return
 		case <-c.confirmShutdown:
 			if c.mutex.TryLock() && c.status == Running {
 				defer c.mutex.Unlock()
-				c.status = Finished
+				c.updateStatus(ctx, Finished)
 				c.shutdown()
 			}
-			c.logger.Infof("Data source %s with runtimeId: %s confirmed stopped", c.id, c.runtimeId.String())
+			c.logger.Infof("Data source '%s' %s with runtimeId: %s confirmed stopped", c.Name(), c.id, c.runtimeId.String())
 			return
 		}
 	}()
@@ -182,7 +200,7 @@ func (c *DataSourceRuntimeManagerCommon) Run(ctx context.Context) error {
 	ctx, c.shutdown = context.WithCancel(ctx)
 	go func() {
 		defer close(c.confirmShutdown)
-		c.logger.Infof("Data source %s with runtimeId: %s started", c.id, c.runtimeId.String())
+		c.logger.Infof("Data source '%s' %s with runtimeId: %s started", c.Name(), c.id, c.runtimeId.String())
 		c.worker.Run(ctx, errorChan)
 	}()
 
@@ -191,7 +209,7 @@ func (c *DataSourceRuntimeManagerCommon) Run(ctx context.Context) error {
 
 func (c *DataSourceRuntimeManagerCommon) Stop(ctx context.Context) error {
 	if c.status != Running {
-		return fmt.Errorf("datasource %s with runtimeId: %s is not running aready running", c.id, c.runtimeId.String())
+		return fmt.Errorf("datasource '%s' %s with runtimeId: %s is not running aready running", c.Name(), c.id, c.runtimeId.String())
 	}
 
 	start := time.Now()
@@ -201,15 +219,15 @@ func (c *DataSourceRuntimeManagerCommon) Stop(ctx context.Context) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	c.status = Stopping
+	c.updateStatus(ctx, Stopping)
 
 	c.shutdown()
 	<-c.confirmShutdown
 	c.confirmShutdown = nil
 
-	c.status = Stopped
+	c.updateStatus(ctx, Stopped)
 
-	c.logger.Infof("Shutdown completed of data source Id: %s take %d Milliseconds", c.runtimeId.String(), time.Since(start).Milliseconds())
+	c.logger.Infof("Shutdown completed of data source '%s' Id: %s take %d Milliseconds", c.Name(), c.runtimeId.String(), time.Since(start).Milliseconds())
 
 	return nil
 }

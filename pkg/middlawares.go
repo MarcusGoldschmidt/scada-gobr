@@ -4,10 +4,11 @@ import (
 	"context"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/auth"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/util"
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel/attribute"
 	"net/http"
 	"strings"
-	"time"
 )
 
 func (s *Scadagobr) setupCors() {
@@ -41,11 +42,16 @@ func (s *Scadagobr) setupLogs() {
 	s.router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			s.Logger.Tracef("Request at %s", r.RequestURI)
-			t1 := time.Now()
+			ctx, span := util.Tracer.Start(r.Context(), r.Method)
+			defer span.End()
+
+			span.SetAttributes(
+				attribute.String("http.method", r.Method),
+				attribute.String("http.host", r.Host),
+			)
+
+			r.WithContext(ctx)
 			next.ServeHTTP(w, r)
-			t2 := time.Now()
-			diff := t2.Sub(t1)
-			s.Logger.Tracef("Request at %s took [%s]", r.RequestURI, diff)
 		})
 	})
 }
@@ -76,7 +82,7 @@ func (s *Scadagobr) adminMiddleware(function RequestHandlerFunction) RequestHand
 
 		claims, err := auth.GetUserFromContext(ctx)
 		if err != nil {
-			s.respondError(w, err)
+			s.respondError(r.Context(), w, err)
 			return
 		}
 

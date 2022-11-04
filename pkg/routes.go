@@ -1,7 +1,10 @@
 package pkg
 
 import (
+	scadaServer "github.com/MarcusGoldschmidt/scadagobr/pkg/server"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 type RequestHandlerFunction func(scada *Scadagobr, w http.ResponseWriter, r *http.Request)
@@ -35,6 +38,8 @@ func (s *Scadagobr) setRouters() {
 	s.setupLogs()
 	s.setupCors()
 	s.setupProviders()
+
+	s.router.Handle("/api/datasource/integration", s.internalRoute)
 
 	s.get("/api/healthcheck", HealthCheckHandler)
 
@@ -86,4 +91,25 @@ func (s *Scadagobr) setRouters() {
 	s.put("/api/v1/view/{id}", s.authAndIsAdminMiddleware(UpdateViewHandler))
 	s.delete("/api/v1/view/{id}", s.authAndIsAdminMiddleware(DeleteViewHandler))
 	s.delete("/api/v1/view/{id}/component/{componentId}", s.authAndIsAdminMiddleware(DeleteViewComponentHandler))
+}
+
+func (s *Scadagobr) setServer() error {
+	if s.server != nil {
+		return nil
+	}
+
+	err := scadaServer.SetupSpa(s.router)
+	if err != nil {
+		return err
+	}
+
+	s.server = &http.Server{
+		Handler:      s.router,
+		Addr:         s.Option.Address + ":" + strconv.Itoa(s.Option.Port),
+		TLSConfig:    s.Option.TLSConfig,
+		WriteTimeout: 30 * time.Second,
+		ReadTimeout:  30 * time.Second,
+	}
+
+	return nil
 }

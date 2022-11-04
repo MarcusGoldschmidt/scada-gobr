@@ -1,42 +1,52 @@
 package pkg
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/go-playground/validator/v10"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"net/http"
 	"strings"
 )
 
-func (s *Scadagobr) respondJsonOk(w http.ResponseWriter, payload interface{}) {
-	s.respondJson(w, http.StatusOK, payload)
+func (s *Scadagobr) respondJsonOk(ctx context.Context, w http.ResponseWriter, payload interface{}) {
+	span := trace.SpanFromContext(ctx)
+	span.SetStatus(codes.Ok, "")
+
+	s.respondJson(ctx, w, http.StatusOK, payload)
 }
 
-func (s *Scadagobr) respondJsonCreated(w http.ResponseWriter, payload interface{}) {
-	s.respondJson(w, http.StatusCreated, payload)
+func (s *Scadagobr) respondJsonCreated(ctx context.Context, w http.ResponseWriter, payload interface{}) {
+	span := trace.SpanFromContext(ctx)
+	span.SetStatus(codes.Ok, "")
+	s.respondJson(ctx, w, http.StatusCreated, payload)
 }
 
-func (s *Scadagobr) respondJson(w http.ResponseWriter, status int, payload interface{}) {
+func (s *Scadagobr) respondJson(ctx context.Context, w http.ResponseWriter, status int, payload interface{}) {
 	response, err := json.Marshal(payload)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_, err = w.Write(response)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 }
 
-func (s *Scadagobr) respondBadRequest(w http.ResponseWriter, err error) {
-	s.respondJson(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+func (s *Scadagobr) respondBadRequest(ctx context.Context, w http.ResponseWriter, err error) {
+	s.respondJson(ctx, w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 }
 
-func (s *Scadagobr) respondError(w http.ResponseWriter, err error) {
+func (s *Scadagobr) respondError(ctx context.Context, w http.ResponseWriter, err error) {
+	span := trace.SpanFromContext(ctx)
+
 	if _, ok := err.(*validator.InvalidValidationError); ok {
-		s.respondJson(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		s.respondJson(ctx, w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -48,10 +58,11 @@ func (s *Scadagobr) respondError(w http.ResponseWriter, err error) {
 			response[key] = fieldError.Tag()
 		}
 
-		s.respondJson(w, http.StatusBadRequest, map[string]any{"errors": response})
+		s.respondJson(ctx, w, http.StatusBadRequest, map[string]any{"errors": response})
 		return
 	}
 
+	span.SetStatus(codes.Error, err.Error())
 	s.Logger.Errorf("%s", err.Error())
-	s.respondJson(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	s.respondJson(ctx, w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 }

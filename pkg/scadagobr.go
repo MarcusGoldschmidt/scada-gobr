@@ -5,6 +5,7 @@ import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/auth"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/purge"
@@ -44,8 +45,20 @@ type Scadagobr struct {
 }
 
 func (s *Scadagobr) Setup(ctx context.Context) error {
+	s.Logger.Infof("VERSION: %s", App)
+	s.Logger.Infof("VERSION: %s", Version)
+	s.Logger.Infof("COMMIT: %s", Commit)
+	s.Logger.Infof("BUILT AT: %s", BuiltAt)
 
-	err := s.userPersistence.CreateAdminUser(ctx, s.Option.AdminEmail, s.Option.AdminPassword)
+	ctx, trace := s.Trace(ctx, "Setting up Scadagobr")
+	defer trace.End()
+
+	err := models.AutoMigration(s.Db)
+	if err != nil {
+		return err
+	}
+
+	err = s.userPersistence.CreateAdminUser(ctx, s.Option.AdminEmail, s.Option.AdminPassword)
 	if err != nil {
 		return err
 	}
@@ -64,6 +77,8 @@ func (s *Scadagobr) Run(ctx context.Context) error {
 	ctx = context.WithValue(ctx, providers.TimeProviderCtxKey, s.timeProvider)
 	ctx, s.shutdownContext = context.WithCancel(ctx)
 
+	s.Logger.Infof("Starting Scadagobr")
+
 	go s.purgeManager.Work(ctx)
 
 	err := s.RuntimeManager.RunAll(ctx)
@@ -72,6 +87,21 @@ func (s *Scadagobr) Run(ctx context.Context) error {
 	}
 
 	go s.ListenAndServeHttp(ctx)
+
+	return nil
+}
+
+func (s *Scadagobr) SetupAndRun(ctx context.Context) error {
+	err := s.Setup(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.Run(ctx)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -86,14 +116,12 @@ func (s *Scadagobr) ListenAndServeHttp(ctx context.Context) {
 
 	err := s.server.ListenAndServe()
 	if err != nil {
-		s.Logger.Errorf("%s", err.Error())
+		s.Logger.Infof("%s", err.Error())
 	}
 }
 
 func (s *Scadagobr) Shutdown(ctx context.Context) {
 	s.shutdownContext()
-
-	s.HubManager.ShutDown(ctx)
 
 	err := s.server.Shutdown(ctx)
 	if err != nil {
@@ -101,4 +129,5 @@ func (s *Scadagobr) Shutdown(ctx context.Context) {
 	}
 
 	s.RuntimeManager.StopAll(ctx)
+	s.HubManager.ShutDown(ctx)
 }

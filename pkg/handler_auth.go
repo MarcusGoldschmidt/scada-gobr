@@ -18,19 +18,19 @@ func LoginHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	var request loginRequest
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	err = json.Unmarshal(reqBody, &request)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	user, err := s.userPersistence.GetUserByName(ctx, request.Username)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
@@ -44,11 +44,11 @@ func LoginHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 
 	response, err := s.JwtHandler.CreateJwt(user)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
-	s.respondJsonOk(w, response)
+	s.respondJsonOk(ctx, w, response)
 }
 
 func RefreshTokenHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
@@ -57,32 +57,33 @@ func RefreshTokenHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	var request map[string]string
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	err = json.Unmarshal(reqBody, &request)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	response, err := s.JwtHandler.RefreshToken(ctx, request["refreshToken"])
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
-	s.respondJsonOk(w, response)
+	s.respondJsonOk(ctx, w, response)
 }
 
 func WhoAmIHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
 	claims, err := auth.GetUserFromContext(r.Context())
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
-	s.respondJsonOk(w, claims)
+	s.respondJsonOk(ctx, w, claims)
 }

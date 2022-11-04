@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/buffers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/datasources"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/events/topics"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
@@ -42,23 +44,20 @@ type Manager struct {
 
 	persistence  persistence.DataPointPersistence
 	timeProvider providers.TimeProvider
+
+	eventsManager events.HubManager
 }
 
-func NewRuntimeManager(logger logger.Logger, persistence persistence.DataPointPersistence) *Manager {
+func NewRuntimeManager(logger logger.Logger, persistence persistence.DataPointPersistence, eventsManager events.HubManager, provider providers.TimeProvider) *Manager {
 	return &Manager{
-		Logger:       logger,
-		mutex:        sync.RWMutex{},
-		dataSources:  make(map[shared.CommonId]*dataSourceController),
-		persistence:  persistence,
-		timeProvider: providers.UtcTimeProvider{},
-		options:      ManagerOptions{MaxRuntimeRetry: 5},
+		Logger:        logger,
+		mutex:         sync.RWMutex{},
+		dataSources:   make(map[shared.CommonId]*dataSourceController),
+		persistence:   persistence,
+		timeProvider:  provider,
+		options:       ManagerOptions{MaxRuntimeRetry: 5},
+		eventsManager: eventsManager,
 	}
-}
-
-func (r *Manager) WithTimeProvider(provider providers.TimeProvider) {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-	r.timeProvider = provider
 }
 
 func (r *Manager) WithOptions(opt ManagerOptions) {
@@ -75,10 +74,11 @@ func (r *Manager) AddDataSourceManager(sources ...datasources.DataSourceRuntimeM
 	}
 }
 
-func (r *Manager) RemoveDataSource(id shared.CommonId) {
+func (r *Manager) RemoveDataSource(ctx context.Context, id shared.CommonId) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	delete(r.dataSources, id)
+	r.NotifyUpdated(ctx)
 }
 
 func (r *Manager) Run(ctx context.Context, id shared.CommonId) error {
@@ -94,11 +94,17 @@ func (r *Manager) Run(ctx context.Context, id shared.CommonId) error {
 	dataSource.mutex.Lock()
 	defer dataSource.mutex.Unlock()
 
+	dataSource.dataSourceRuntimeManager.WithNotificationEachStatus(func(ctx context.Context, manager datasources.DataSourceRuntimeManager) {
+		r.NotifyUpdated(ctx)
+	})
+
 	err := dataSource.dataSourceRuntimeManager.Run(ctx)
 	if err != nil {
 		r.Logger.Errorf("datasource runtime %s stopped with error: %s", dataSource.dataSourceRuntimeManager.Name(), err.Error())
 		return err
 	}
+
+	r.NotifyUpdated(ctx)
 
 	return nil
 }
@@ -121,7 +127,7 @@ func (r *Manager) UpdateDataSource(ctx context.Context, ds datasources.DataSourc
 		return err
 	}
 
-	r.RemoveDataSource(ds.Id())
+	r.RemoveDataSource(ctx, ds.Id())
 	r.AddDataSourceManager(ds)
 	// TODO: parse trace id
 	return r.Run(context.Background(), ds.Id())
@@ -153,6 +159,8 @@ func (r *Manager) StopDataSource(ctx context.Context, id shared.CommonId) error 
 	if err != nil {
 		return err
 	}
+
+	r.NotifyUpdated(ctx)
 
 	return nil
 }
@@ -198,4 +206,8 @@ func (r *Manager) CreateLogger(id shared.CommonId, name string) logger.Logger {
 	logOutput := io.MultiWriter(os.Stdout, bufferSize)
 
 	return logger.NewSimpleLogger(id.String()+"-"+name, logOutput)
+}
+
+func (r *Manager) NotifyUpdated(ctx context.Context) {
+	r.eventsManager.SendMessage(ctx, topics.RuntimeManagerUpdated, nil)
 }

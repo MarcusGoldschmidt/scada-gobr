@@ -3,7 +3,6 @@ package pkg
 import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
 	customLogger "github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
-	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	gorm2 "github.com/MarcusGoldschmidt/scadagobr/pkg/persistence/gorm"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/purge"
@@ -12,9 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"net/http"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -29,10 +26,8 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 		return nil, err
 	}
 
-	err = models.AutoMigration(db)
-	if err != nil {
-		return nil, err
-	}
+	// Providers
+	timeProvider := providers.TimeProviderFromTimeZone(opt.Location)
 
 	// Persistence
 	dataSourcePersistence := gorm2.NewDataSourcePersistenceGormImpl(db)
@@ -40,53 +35,32 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 	userPersistence := gorm2.NewUserPersistenceImp(db)
 	viewPersistence := gorm2.NewViewPersistenceGormImpl(db)
 
-	scadaRouter := scadaServer.NewRouter()
-
 	// Runtime manager
-	runtimeManager := runtime.NewRuntimeManager(loggerImp, dataPointPersistence)
-	runtimeManager.WithTimeProvider(providers.UtcTimeProvider{})
-
-	// Providers
-	timeProvider := providers.UtcTimeProvider{}
-
-	// Route to net server datasource
-	r := mux.NewRouter()
-	r.Handle("/api/datasource/integration", scadaRouter)
-
-	jwtHandler := SetupJwtHandler(opt, userPersistence)
-
-	purgeManager := purge.NewManager(dataPointPersistence, dataSourcePersistence, providers.UtcTimeProvider{}, loggerImp, time.Hour)
+	runtimeManager := runtime.NewRuntimeManager(loggerImp, dataPointPersistence, hubManager, timeProvider)
+	purgeManager := purge.NewManager(dataPointPersistence, dataSourcePersistence, timeProvider, loggerImp, time.Hour)
 
 	scada := &Scadagobr{
 		RuntimeManager:        runtimeManager,
 		Logger:                loggerImp,
 		Db:                    db,
 		Option:                opt,
-		router:                r,
+		router:                mux.NewRouter(),
+		JwtHandler:            SetupJwtHandler(opt, userPersistence),
 		userPersistence:       userPersistence,
-		JwtHandler:            jwtHandler,
 		dataSourcePersistence: dataSourcePersistence,
 		dataPointPersistence:  dataPointPersistence,
-		internalRoute:         scadaRouter,
+		viewPersistence:       viewPersistence,
+		internalRoute:         scadaServer.NewRouter(),
 		purgeManager:          purgeManager,
 		HubManager:            hubManager,
-		viewPersistence:       viewPersistence,
 		timeProvider:          timeProvider,
 	}
 
 	scada.setRouters()
 
-	err = scadaServer.SetupSpa(scada.router)
+	err = scada.setServer()
 	if err != nil {
 		return nil, err
-	}
-
-	scada.server = &http.Server{
-		Handler:      scada.router,
-		Addr:         opt.Address + ":" + strconv.Itoa(opt.Port),
-		TLSConfig:    opt.TLSConfig,
-		WriteTimeout: 30 * time.Second,
-		ReadTimeout:  30 * time.Second,
 	}
 
 	return scada, nil

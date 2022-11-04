@@ -20,7 +20,7 @@ func GetDataSeriesByGroup(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 		periodInt, err := strconv.ParseInt(periodString[0], 10, 64)
 
 		if err != nil {
-			s.respondError(w, err)
+			s.respondError(ctx, w, err)
 			return
 		}
 
@@ -32,7 +32,7 @@ func GetDataSeriesByGroup(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 	for i, value := range strings {
 		id, err := uuid.Parse(value)
 		if err != nil {
-			s.respondError(w, err)
+			s.respondError(ctx, w, err)
 			return
 		}
 
@@ -45,9 +45,9 @@ func GetDataSeriesByGroup(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 
 	series, err := s.dataPointPersistence.GetPointValuesByIds(ctx, dataPointsIds, begin, now)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
-	s.respondJsonOk(w, series)
+	s.respondJsonOk(ctx, w, series)
 }

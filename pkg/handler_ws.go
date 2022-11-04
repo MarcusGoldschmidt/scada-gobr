@@ -17,13 +17,13 @@ func GetWsTimeSeriesViewComponent(s *Scadagobr, w http.ResponseWriter, r *http.R
 
 	viewComponentId, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	conn, err := wsUpgrade.Upgrade(w, r, nil)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 	defer func(conn *websocket.Conn) {
@@ -35,12 +35,12 @@ func GetWsTimeSeriesViewComponent(s *Scadagobr, w http.ResponseWriter, r *http.R
 
 	viewComponent, err := s.viewPersistence.GetViewComponentById(ctx, viewComponentId)
 	if err != nil {
-		s.respondError(w, err)
+		s.respondError(ctx, w, err)
 		return
 	}
 
 	if viewComponent.ViewType != models.TimeSeriesViewType {
-		s.respondError(w, errors.New("view type is not time series"))
+		s.respondError(ctx, w, errors.New("view type is not time series"))
 		return
 	}
 
@@ -51,7 +51,7 @@ func GetWsTimeSeriesViewComponent(s *Scadagobr, w http.ResponseWriter, r *http.R
 	for _, id := range datapointIdsInterface {
 		parse, err := uuid.Parse(id.(string))
 		if err != nil {
-			s.respondError(w, err)
+			s.respondError(ctx, w, err)
 			return
 		}
 		client := wshandler.NewDataPointHubClient(parse, conn, mutex)

@@ -3,8 +3,10 @@ package purge
 import (
 	"context"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
+	"sync"
 	"time"
 )
 
@@ -38,20 +40,30 @@ func (m *Manager) Purge(ctx context.Context) error {
 		return err
 	}
 
+	wg := sync.WaitGroup{}
+
 	for _, point := range points {
 		if point.PurgeAfter == nil {
 			continue
 		}
 
+		wg.Add(1)
+
 		now := m.timeProvider.GetCurrentTime()
 
-		begin := now.Add(-(*point.PurgeAfter))
+		go func(point *models.DataPoint) {
+			defer wg.Done()
 
-		err := m.dataPointPersistence.DeleteDataPointValueByPeriod(ctx, point.Id, begin, now)
-		if err != nil {
-			return err
-		}
+			purgeDate := now.Add(-(*point.PurgeAfter))
+
+			err := m.dataPointPersistence.DeleteDataPointValueByPeriod(ctx, point.Id, time.Time{}, purgeDate)
+			if err != nil {
+				m.logger.Errorf("error on purge %s", err.Error())
+			}
+		}(point)
 	}
+
+	wg.Wait()
 
 	return nil
 }
@@ -61,7 +73,7 @@ func (m *Manager) Work(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			m.logger.Errorf("%s", ctx.Err())
+			m.logger.Infof("%s", ctx.Err())
 			return
 		case <-ticker.C:
 			err := m.Purge(ctx)

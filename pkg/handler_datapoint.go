@@ -99,6 +99,12 @@ func CreateDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	err = s.UpdateDataSource(ctx, ds.Id)
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
 	err = json.Unmarshal(dataPoint.Data, &dataPoint.TypeData)
 	if err != nil {
 		s.respondError(w, err)
@@ -181,6 +187,12 @@ func EditDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	err = s.UpdateDataSource(ctx, dataPoint.DataSourceId)
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
 	s.respondJsonOk(w, dataPoint)
 }
 
@@ -213,6 +225,18 @@ func DeleteDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request
 	}
 
 	err = s.dataPointPersistence.DeleteDataPoint(ctx, id, dataPointId)
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
+	err = s.UpdateDataSource(ctx, id)
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
+	err = s.dataPointPersistence.DeleteDataPointValueById(ctx, dataPointId)
 	if err != nil {
 		s.respondError(w, err)
 		return

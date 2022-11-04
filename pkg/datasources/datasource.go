@@ -149,19 +149,12 @@ func (c *DataSourceRuntimeManagerCommon) Run(ctx context.Context) error {
 	}
 
 	c.confirmShutdown = make(chan bool)
-	ctx, c.shutdown = context.WithCancel(ctx)
 
 	c.status = Running
 
 	c.mutex.Unlock()
 
 	errorChan := make(chan error)
-
-	go func() {
-		defer close(c.confirmShutdown)
-
-		c.worker.Run(ctx, errorChan)
-	}()
 
 	go func() {
 		select {
@@ -181,7 +174,16 @@ func (c *DataSourceRuntimeManagerCommon) Run(ctx context.Context) error {
 				c.status = Finished
 				c.shutdown()
 			}
+			c.logger.Infof("Data source %s with runtimeId: %s confirmed stopped", c.id, c.runtimeId.String())
+			return
 		}
+	}()
+
+	ctx, c.shutdown = context.WithCancel(ctx)
+	go func() {
+		defer close(c.confirmShutdown)
+		c.logger.Infof("Data source %s with runtimeId: %s started", c.id, c.runtimeId.String())
+		c.worker.Run(ctx, errorChan)
 	}()
 
 	return nil

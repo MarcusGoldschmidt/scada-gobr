@@ -25,6 +25,11 @@ func NewDataPointPersistenceGormImpl(db *gorm.DB, hubManager events.HubManager) 
 	}
 }
 
+func (d *DataPointPersistenceGormImpl) DeleteDataPointValueById(ctx context.Context, id shared.CommonId) error {
+	db := d.db.WithContext(ctx)
+	return db.Delete(&models.DataSeries{}, "data_point_id = ?", id).Error
+}
+
 func (d *DataPointPersistenceGormImpl) GetGroupNameByDataPointId(ctx context.Context, datapointId shared.CommonId) (string, error) {
 	db := d.db.WithContext(ctx)
 

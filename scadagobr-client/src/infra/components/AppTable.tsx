@@ -1,4 +1,4 @@
-import {Skeleton, Space, Table} from "antd";
+import {Skeleton, Table} from "antd";
 import {UseQueryResult} from "react-query";
 import * as React from "react";
 

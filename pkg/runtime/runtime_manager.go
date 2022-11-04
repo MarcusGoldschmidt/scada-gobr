@@ -2,7 +2,7 @@ package runtime
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/buffers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/datasources"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
@@ -18,12 +18,25 @@ type ManagerOptions struct {
 	MaxRuntimeRetry int
 }
 
+type dataSourceController struct {
+	dataSourceRuntimeManager datasources.DataSourceRuntimeManager
+	mutex                    sync.RWMutex
+	logs                     *buffers.MaxBuffer
+}
+
+func newDataSourceController(dataSourceRuntimeManager datasources.DataSourceRuntimeManager) *dataSourceController {
+	return &dataSourceController{
+		dataSourceRuntimeManager,
+		sync.RWMutex{},
+		nil,
+	}
+}
+
 type Manager struct {
 	Logger logger.Logger
 	mutex  sync.RWMutex
 
-	dataSources     map[shared.CommonId]datasources.DataSourceRuntimeManager
-	dataSourcesLogs map[shared.CommonId]*buffers.MaxBuffer
+	dataSources map[shared.CommonId]*dataSourceController
 
 	options ManagerOptions
 
@@ -33,31 +46,38 @@ type Manager struct {
 
 func NewRuntimeManager(logger logger.Logger, persistence persistence.DataPointPersistence) *Manager {
 	return &Manager{
-		Logger:          logger,
-		mutex:           sync.RWMutex{},
-		dataSources:     make(map[shared.CommonId]datasources.DataSourceRuntimeManager),
-		persistence:     persistence,
-		timeProvider:    providers.UtcTimeProvider{},
-		options:         ManagerOptions{MaxRuntimeRetry: 5},
-		dataSourcesLogs: make(map[shared.CommonId]*buffers.MaxBuffer),
+		Logger:       logger,
+		mutex:        sync.RWMutex{},
+		dataSources:  make(map[shared.CommonId]*dataSourceController),
+		persistence:  persistence,
+		timeProvider: providers.UtcTimeProvider{},
+		options:      ManagerOptions{MaxRuntimeRetry: 5},
 	}
 }
 
 func (r *Manager) WithTimeProvider(provider providers.TimeProvider) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	r.timeProvider = provider
 }
 
 func (r *Manager) WithOptions(opt ManagerOptions) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	r.options = opt
 }
 
 func (r *Manager) AddDataSourceManager(sources ...datasources.DataSourceRuntimeManager) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	for _, source := range sources {
-		r.dataSources[source.Id()] = source
+		r.dataSources[source.Id()] = newDataSourceController(source)
 	}
 }
 
 func (r *Manager) RemoveDataSource(id shared.CommonId) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	delete(r.dataSources, id)
 }
 
@@ -65,11 +85,18 @@ func (r *Manager) Run(ctx context.Context, id shared.CommonId) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	dataSource := r.dataSources[id]
+	dataSource, ok := r.dataSources[id]
 
-	err := dataSource.Run(ctx)
+	if !ok {
+		return fmt.Errorf("data source %s not found", id.String())
+	}
+
+	dataSource.mutex.Lock()
+	defer dataSource.mutex.Unlock()
+
+	err := dataSource.dataSourceRuntimeManager.Run(ctx)
 	if err != nil {
-		r.Logger.Errorf("datasource runtime %s stopped with error: %s", dataSource.Name(), err.Error())
+		r.Logger.Errorf("datasource runtime %s stopped with error: %s", dataSource.dataSourceRuntimeManager.Name(), err.Error())
 		return err
 	}
 
@@ -88,10 +115,16 @@ func (r *Manager) RunAll(ctx context.Context) error {
 }
 
 func (r *Manager) UpdateDataSource(ctx context.Context, ds datasources.DataSourceRuntimeManager) error {
-	_ = r.StopDataSource(ctx, ds.Id())
+	err := r.StopDataSource(ctx, ds.Id())
+
+	if err != nil {
+		return err
+	}
+
 	r.RemoveDataSource(ds.Id())
 	r.AddDataSourceManager(ds)
-	return r.Run(ctx, ds.Id())
+	// TODO: parse trace id
+	return r.Run(context.Background(), ds.Id())
 }
 
 func (r *Manager) RestartDataSource(ctx context.Context, id shared.CommonId) error {
@@ -109,10 +142,14 @@ func (r *Manager) StopDataSource(ctx context.Context, id shared.CommonId) error 
 	datasourceManager, ok := r.dataSources[id]
 
 	if !ok {
-		return errors.New("datasource not found")
+		r.Logger.Warningf("Shutdown datapoint runtime %s not found", id.String())
+		return nil
 	}
 
-	err := datasourceManager.Stop(ctx)
+	datasourceManager.mutex.Lock()
+	defer datasourceManager.mutex.Unlock()
+
+	err := datasourceManager.dataSourceRuntimeManager.Stop(ctx)
 	if err != nil {
 		return err
 	}
@@ -144,11 +181,21 @@ func (r *Manager) StopAll(ctx context.Context) {
 }
 
 func (r *Manager) CreateLogger(id shared.CommonId, name string) logger.Logger {
-	bufferSize := buffers.NewMaxBuffer(buffers.MB)
+	dataSource, ok := r.dataSources[id]
 
-	r.dataSourcesLogs[id] = bufferSize
+	if !ok {
+		return logger.NewSimpleLogger(id.String()+"-"+name, os.Stdout)
+	}
+	var bufferSize *buffers.MaxBuffer
+	if dataSource.logs != nil {
+		bufferSize = dataSource.logs
+	}
 
-	logOutput := io.MultiWriter(os.Stderr, bufferSize)
+	bufferSize = buffers.NewMaxBuffer(buffers.MB)
+
+	dataSource.logs = bufferSize
+
+	logOutput := io.MultiWriter(os.Stdout, bufferSize)
 
 	return logger.NewSimpleLogger(id.String()+"-"+name, logOutput)
 }

@@ -3,6 +3,7 @@ package runtime
 import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/datasources"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
+	"sync"
 )
 
 type DataSourceRuntimeManagerStatus struct {
@@ -28,11 +29,27 @@ func newDataSourceRuntimeManagerStatus(manager datasources.DataSourceRuntimeMana
 }
 
 func (r *Manager) GetAllDataSources() []*DataSourceRuntimeManagerStatus {
-	var response []*DataSourceRuntimeManagerStatus
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
 
+	response := make([]*DataSourceRuntimeManagerStatus, len(r.dataSources))
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(r.dataSources))
+	i := 0
 	for _, manager := range r.dataSources {
-		response = append(response, newDataSourceRuntimeManagerStatus(manager))
+		go func(index int, controller *dataSourceController) {
+			controller.mutex.RLock()
+			defer controller.mutex.RUnlock()
+			defer wg.Done()
+
+			response[index] = newDataSourceRuntimeManagerStatus(controller.dataSourceRuntimeManager)
+		}(i, manager)
+
+		i++
 	}
+
+	wg.Wait()
 
 	return response
 }

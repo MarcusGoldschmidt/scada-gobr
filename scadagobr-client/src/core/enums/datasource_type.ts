@@ -4,3 +4,9 @@ export enum DatasourceType {
     RandomValue = 'RandomValue',
     Sql = 'Sql',
 }
+
+export enum DataPointLoggingType {
+    AllData = 'AllData',
+    WhenValueChanges = 'WhenValueChanges',
+    TimeStampChanges = 'TimeStampChanges',
+}

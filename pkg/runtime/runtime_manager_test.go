@@ -44,7 +44,7 @@ func TestSimpleRuntime(t *testing.T) {
 	}
 
 	for _, manager := range rt.dataSources {
-		if manager.Status() != datasources.Stopped {
+		if manager.dataSourceRuntimeManager.Status() != datasources.Stopped {
 			t.Errorf("expected to shutdown all data sources")
 		}
 	}

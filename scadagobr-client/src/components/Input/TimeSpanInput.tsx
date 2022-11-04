@@ -1,11 +1,14 @@
 import {Form, FormInstance, Input} from "antd";
 import InputMask from 'react-input-mask';
-import {nanosecondToTimespanFormatted, validateDuration} from "../../../../core/types/timespan";
 import {useMemo} from "react";
+import {nanosecondToTimespanFormatted, validateDuration} from "../../core/types/timespan";
 
 
-interface RandomValueDatasourceFormProps {
+interface TimeSpanInputProps {
     period?: number;
+    name: string | string[];
+    label: string;
+    required?: boolean;
 }
 
 const validateRange = (_: FormInstance): any => ({
@@ -19,7 +22,12 @@ const validateRange = (_: FormInstance): any => ({
     },
 });
 
-export default function RandomValueDatasourceForm({period}: RandomValueDatasourceFormProps) {
+export default function TimeSpanInput({
+                                          period = undefined,
+                                          name,
+                                          required = false,
+                                          label
+                                      }: TimeSpanInputProps) {
     const timeSpan = useMemo(
         () => nanosecondToTimespanFormatted(period, "01h00m00s"),
         [period]
@@ -27,9 +35,9 @@ export default function RandomValueDatasourceForm({period}: RandomValueDatasourc
 
     return (
         <>
-            <Form.Item name={["data", "period"]} initialValue={timeSpan} label="Period"
+            <Form.Item name={name} initialValue={timeSpan} label={label}
                 // @ts-ignore
-                       rules={[{required: true}, validateRange]}>
+                       rules={[{required}, validateRange]}>
                 <InputMask mask="99h99m99s" autoComplete="off">
                     <Input/>
                 </InputMask>

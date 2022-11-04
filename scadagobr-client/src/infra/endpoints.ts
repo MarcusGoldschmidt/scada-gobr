@@ -24,13 +24,16 @@ export const PathsV1 = {
     DataSourceCreate: 'api/v1/datasource',
     DataSourceDelete: (dataPointId: string) => `/api/v1/datasource/${dataPointId}`,
     DataSourceUpdate: 'api/v1/datasource/',
-    DataSourceGetById: 'api/v1/datasource/',
+    DataSourceGetById: (dataPointId: string) => `/api/v1/datasource/${dataPointId}`,
     // DataPoints
     DataPointGetById: (dataPointId: string) => `/api/v1/datapoint/${dataPointId}`,
-    DataPointGet: (dataSourceId: string) => `/api/v1/datasource/${dataSourceId}/datapoint`,
+    DataPointsGet: (dataSourceId: string) => `/api/v1/datasource/${dataSourceId}/datapoint`,
     DataPointCreate: (dataSourceId: string) => `/api/v1/datasource/${dataSourceId}/datapoint`,
     DataPointDelete: (dataSourceId: string, dataPointId: string) => `/api/v1/datasource/${dataSourceId}/datapoint/${dataPointId}`,
     DataPointUpdate: (dataSourceId: string, dataPointId: string) => `/api/v1/datasource/${dataSourceId}/datapoint/${dataPointId}`,
+
+    // Runtime Manager
+    RuntimeManagerGetStatus: '/api/v1/runtime-manager/status',
 
 } as const;
 

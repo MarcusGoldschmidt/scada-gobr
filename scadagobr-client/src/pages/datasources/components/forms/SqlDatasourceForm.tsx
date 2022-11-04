@@ -4,7 +4,6 @@ interface SqlDatasourceFormProps {
 }
 
 export default function SqlDatasourceForm(props: SqlDatasourceFormProps) {
-
     return (
         <>
             <Form.Item name="name" label="Name" rules={[{required: true}]}>

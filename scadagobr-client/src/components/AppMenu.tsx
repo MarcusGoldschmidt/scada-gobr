@@ -56,7 +56,7 @@ const onMenuClick = (item: MenuItem, navigate: any) => {
             navigate({to: '/datasource'});
             break;
         case '4':
-            navigate({to: '/'});
+            navigate({to: '/view'});
             break;
         case '5':
             navigate({to: '/user'});

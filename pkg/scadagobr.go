@@ -50,7 +50,7 @@ func (s *Scadagobr) Setup(ctx context.Context) error {
 		return err
 	}
 
-	datasourceManagers, err := LoadDataSourcesRuntimeManager(ctx, s)
+	datasourceManagers, err := s.LoadDataSourcesRuntimeManager(ctx)
 	if err != nil {
 		return err
 	}
@@ -71,16 +71,23 @@ func (s *Scadagobr) Run(ctx context.Context) error {
 		return err
 	}
 
-	s.Logger.Infof("Start HTTP server with address: %s", s.server.Addr)
-
-	go func() {
-		err := s.server.ListenAndServe()
-		if err != nil {
-			s.Logger.Errorf("%s", err.Error())
-		}
-	}()
+	go s.ListenAndServeHttp(ctx)
 
 	return nil
+}
+
+func (s *Scadagobr) ListenAndServeHttp(ctx context.Context) {
+	protocol := "https://"
+	if s.server.TLSConfig == nil {
+		protocol = "http://"
+	}
+
+	s.Logger.Infof("Start HTTP server with address: %s%s", protocol, s.server.Addr)
+
+	err := s.server.ListenAndServe()
+	if err != nil {
+		s.Logger.Errorf("%s", err.Error())
+	}
 }
 
 func (s *Scadagobr) Shutdown(ctx context.Context) {

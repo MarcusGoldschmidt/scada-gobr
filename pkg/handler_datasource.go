@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -40,6 +41,30 @@ func GetDataSourcesHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request)
 	}
 
 	s.respondJsonOk(w, sources)
+}
+
+func GetDataSourceByIdHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id, err := uuid.Parse(mux.Vars(r)["id"])
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
+	datasource, err := s.dataSourcePersistence.GetDataSourceById(ctx, id)
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
+	err = json.Unmarshal(datasource.Data, &datasource.TypeData)
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
+	s.respondJsonOk(w, datasource)
 }
 
 type createDataSource struct {
@@ -140,11 +165,35 @@ func DeleteDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	datapoints, err := s.dataSourcePersistence.GetDataPoints(ctx, id)
+
+	if err != nil {
+		s.respondError(w, err)
+		return
+	}
+
 	err = s.dataSourcePersistence.DeleteDataSource(ctx, id)
 	if err != nil {
 		s.respondError(w, err)
 		return
 	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(datapoints) + 1)
+
+	go func() {
+		defer wg.Done()
+		_ = s.RuntimeManager.StopDataSource(ctx, id)
+	}()
+
+	for _, datapoint := range datapoints {
+		go func(datapoint *models.DataPoint) {
+			defer wg.Done()
+			_ = s.dataPointPersistence.DeleteDataPointValueById(ctx, datapoint.Id)
+		}(datapoint)
+	}
+
+	wg.Wait()
 
 	w.WriteHeader(http.StatusOK)
 }

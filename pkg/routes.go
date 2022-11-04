@@ -57,6 +57,7 @@ func (s *Scadagobr) setRouters() {
 	s.get("/api/v1/datasource/types", s.authAndIsAdminMiddleware(GetDataSourceTypesHandler))
 	s.get("/api/v1/datasource/runtime", s.authAndIsAdminMiddleware(GetDataSourcesRuntime))
 	s.get("/api/v1/datasource", s.authAndIsAdminMiddleware(GetDataSourcesHandler))
+	s.get("/api/v1/datasource/{id}", s.authAndIsAdminMiddleware(GetDataSourceByIdHandler))
 	s.post("/api/v1/datasource", s.authAndIsAdminMiddleware(CreateDataSourceHandler))
 	s.put("/api/v1/datasource/{id}", s.authAndIsAdminMiddleware(EditDataSourceHandler))
 	s.delete("/api/v1/datasource/{id}", s.authAndIsAdminMiddleware(DeleteDataSourceHandler))
@@ -67,6 +68,9 @@ func (s *Scadagobr) setRouters() {
 	s.post("/api/v1/datasource/{id}/datapoint", s.authAndIsAdminMiddleware(CreateDataPointHandler))
 	s.put("/api/v1/datasource/{id}/datapoint/{dataPointId}", s.authAndIsAdminMiddleware(EditDataPointHandler))
 	s.delete("/api/v1/datasource/{id}/datapoint/{dataPointId}", s.authAndIsAdminMiddleware(DeleteDataPointHandler))
+
+	// RuntimeManager
+	s.get("/api/v1/runtime-manager/status", s.authAndIsAdminMiddleware(GetRuntimeMangerStatusHandler))
 
 	// DataSeries
 	s.get("/api/v1/data-series/group", s.authAndIsAdminMiddleware(GetDataSeriesByGroup))

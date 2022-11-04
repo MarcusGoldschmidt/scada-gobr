@@ -2,7 +2,7 @@ import {Button, Col, Modal, Row, Space, Typography} from "antd";
 import Column from "antd/es/table/Column";
 import AppTable from "../../infra/components/AppTable";
 import {AppButton} from "../../components/button/AppButton";
-import useUsers from "../../core/hooks/useUsers";
+import user from "../../core/hooks/user";
 import {
     CloseOutlined,
     CheckOutlined, ExclamationCircleOutlined,
@@ -24,7 +24,7 @@ const removeUser = (id: number) => {
 }
 
 function DatasourceShow() {
-    const data = useUsers();
+    const data = user();
 
     return (
         <>

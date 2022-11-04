@@ -58,7 +58,15 @@ func NewDataSourcePersistenceGormImpl(db *gorm.DB) *DataSourcePersistenceGormImp
 
 func (d DataSourcePersistenceGormImpl) GetDataSourceById(ctx context.Context, id shared.CommonId) (*models.DataSource, error) {
 	db := d.db.WithContext(ctx)
-	return getById[models.DataSource](db, id)
+
+	var data *models.DataSource
+	err := db.Model(&models.DataSource{}).Preload("DataPoints").Where("id = ?", id.String()).First(&data).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 func (d DataSourcePersistenceGormImpl) GetDataSources(ctx context.Context) ([]*models.DataSource, error) {

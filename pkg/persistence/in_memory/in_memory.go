@@ -14,6 +14,11 @@ type InMemoryPersistence struct {
 	dataPoints map[shared.CommonId]*models.DataPoint
 }
 
+func (f *InMemoryPersistence) DeleteDataPointValueById(ctx context.Context, id shared.CommonId) error {
+	delete(f.series, id)
+	return nil
+}
+
 func NewInMemoryPersistence() *InMemoryPersistence {
 	return &InMemoryPersistence{series: make(map[shared.CommonId][]*models.DataSeries)}
 }

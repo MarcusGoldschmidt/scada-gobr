@@ -40,7 +40,7 @@ func (s *Scadagobr) setupProviders() {
 func (s *Scadagobr) setupLogs() {
 	s.router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			s.Logger.Infof("Request at %s", r.RequestURI)
+			s.Logger.Tracef("Request at %s", r.RequestURI)
 			t1 := time.Now()
 			next.ServeHTTP(w, r)
 			t2 := time.Now()

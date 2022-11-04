@@ -1,5 +1,5 @@
 import {Button, Col, Form, Row, Typography} from "antd";
-import {useMatch} from "react-location";
+import {useLocation} from "react-location";
 import DatasourceCommonForm from "./components/DatasourceCommonForm";
 import React, {useState} from "react";
 import {DatasourceType} from "../../core/enums/datasource_type";
@@ -7,7 +7,8 @@ import SqlDatasourceForm from "./components/forms/SqlDatasourceForm";
 import RandomValueDatasourceForm from "./components/forms/RandomValueDatasourceForm";
 import HttpRequestDatasourceForm from "./components/forms/HttpRequestDatasourceForm";
 import HttpServerDatasourceForm from "./components/forms/HttpServerDatasourceForm";
-import useCreateDatasource from "../../core/hooks/useCreateDatasource";
+import {openNotificationCreated} from "../../infra/notification";
+import {useCreateDatasource} from "../../core/hooks/datasource";
 
 const mapComponent = {
     [DatasourceType.Sql]: <SqlDatasourceForm/>,
@@ -17,20 +18,23 @@ const mapComponent = {
 }
 
 function DatasourceInput() {
-    const {params} = useMatch()
     const [form] = Form.useForm();
+    const {history} = useLocation()
 
     const [datasourceType, setDatasourceType] = useState<DatasourceType>(DatasourceType.RandomValue);
 
-    const {mutate, isLoading, status} = useCreateDatasource();
-
-    
+    const {mutate} = useCreateDatasource({
+        onSuccess: () => {
+            openNotificationCreated()
+            history.back()
+        }
+    });
 
     return (
         <>
             <Row>
                 <Col span={12}>
-                    <Typography.Title> {params.datasourceId ? "Edit" : "Create"} Datasource</Typography.Title>
+                    <Typography.Title> Create Datasource</Typography.Title>
                 </Col>
             </Row>
             <Form form={form} layout="vertical" onFinish={(e) => mutate(e)}>

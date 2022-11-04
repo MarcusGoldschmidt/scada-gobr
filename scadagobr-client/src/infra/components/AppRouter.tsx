@@ -8,6 +8,7 @@ import NotFound from "../../components/NotFound";
 import DatasourceInput from "../../pages/datasources/DatasourceInput";
 import Login from "../../pages/auth/Login";
 import React from "react";
+import DatasourceEdit from "../../pages/datasources/DatasourceEdit";
 
 const reactLocation = new ReactLocation()
 
@@ -28,7 +29,7 @@ export default function AppRouter() {
                         element: <Login/>,
                     },
                     {
-                        path: 'datasource',
+                        path: '/datasource',
                         children: [
                             {
                                 path: '/',
@@ -39,8 +40,8 @@ export default function AppRouter() {
                                 element: useAuth(<DatasourceInput/>),
                             },
                             {
-                                path: '/:id/edit',
-                                element: useAuth(<DatasourceInput/>),
+                                path: '/:id',
+                                element: async (e) => useAuth(<DatasourceEdit datasourceId={e.params.id}/>),
                             },
                         ]
                     },

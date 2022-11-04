@@ -22,6 +22,7 @@ type DataPointPersistence interface {
 	AddDataPointValue(ctx context.Context, id shared.CommonId, value *shared.Series) error
 	AddDataPointValues(ctx context.Context, values []*models.DataSeries) error
 	DeleteDataPointValueByPeriod(ctx context.Context, id shared.CommonId, begin time.Time, end time.Time) error
+	DeleteDataPointValueById(ctx context.Context, id shared.CommonId) error
 
 	GetPointValues(ctx context.Context, id shared.CommonId, begin time.Time, end time.Time) ([]*shared.Series, error)
 	GetPointValuesByIds(ctx context.Context, id []shared.CommonId, begin time.Time, end time.Time) ([]*SeriesGroupIdentifier, error)

@@ -8,3 +8,21 @@ export const openNotificationWithIcon = (props: ArgsProps, type: NotificationTyp
         ...props,
     });
 };
+
+export const openNotificationCreated = (message: string = "Resource created") => {
+    openNotificationWithIcon({
+        message,
+    }, 'success');
+}
+
+export const openNotificationUpdated = (message: string = "Resource updated") => {
+    openNotificationWithIcon({
+        message,
+    }, 'success');
+}
+
+export const openNotificationDeleted = (message: string = "Resource deleted") => {
+    openNotificationWithIcon({
+        message,
+    }, 'error');
+}

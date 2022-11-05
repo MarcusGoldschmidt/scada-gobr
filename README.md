@@ -73,6 +73,11 @@ information on operator workstations for monitoring and control.
 * [ ] Internationalization
 * [ ] Prometheus metrics
 * [ ] Metrics dashboard
+* [ ] Schedule
+    * [ ] Cron like
+    * [ ] Persistent
+    * [ ] Queue
+    * [ ] Run scripts
 * [ ] Swagger
 * [ ] Load data sources runtime across a cluster of s-gobr with consensus and then create a k8s operator
     * [ ] Consensus Raft

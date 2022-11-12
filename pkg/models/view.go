@@ -22,11 +22,11 @@ type View struct {
 }
 
 type ViewComponent struct {
-	Id       uuid.UUID `json:"id" gorm:"type:uuid"`
-	Position Position  `json:"position" gorm:"embedded"`
-	ViewType ViewType  `json:"viewType"`
-	ViewId   uuid.UUID `json:"viewId" gorm:"type:uuid"`
-	Data     JSONB     `json:"data" gorm:"type:jsonb"`
+	Id       uuid.UUID         `json:"id" gorm:"type:uuid"`
+	Position Position          `json:"position" gorm:"embedded"`
+	ViewType ViewType          `json:"viewType"`
+	ViewId   uuid.UUID         `json:"viewId" gorm:"type:uuid"`
+	Data     shared.JsonB[any] `json:"data" gorm:"type:jsonb"`
 }
 
 type Position struct {

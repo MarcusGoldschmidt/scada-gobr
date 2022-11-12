@@ -18,9 +18,9 @@ func GetTimeProviderFromCtx(ctx context.Context) TimeProvider {
 	return TimeProvider(&UtcTimeProvider{})
 }
 
-var DefaultTimeProvider = UtcTimeProvider{}
+var DefaultTimeProvider TimeProvider = UtcTimeProvider{}
 
-func SetTimeProvider(provider UtcTimeProvider) {
+func SetTimeProvider(provider TimeProvider) {
 	DefaultTimeProvider = provider
 }
 

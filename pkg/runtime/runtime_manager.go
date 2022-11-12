@@ -11,6 +11,7 @@ import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/util"
 	"io"
 	"os"
 	"sync"
@@ -129,8 +130,9 @@ func (r *Manager) UpdateDataSource(ctx context.Context, ds datasources.DataSourc
 
 	r.RemoveDataSource(ctx, ds.Id())
 	r.AddDataSourceManager(ds)
-	// TODO: parse trace id
-	return r.Run(context.Background(), ds.Id())
+
+	ctx = util.NewContextWithTrace(ctx)
+	return r.Run(ctx, ds.Id())
 }
 
 func (r *Manager) RestartDataSource(ctx context.Context, id shared.CommonId) error {
@@ -173,8 +175,7 @@ func (r *Manager) StopAll(ctx context.Context) {
 	wg.Add(len(r.dataSources))
 
 	for id := range r.dataSources {
-		id := id
-		go func() {
+		go func(id shared.CommonId) {
 			defer wg.Done()
 
 			err := r.StopDataSource(ctx, id)
@@ -182,7 +183,7 @@ func (r *Manager) StopAll(ctx context.Context) {
 				r.Logger.Warningf("error on stopping data source Id: %s, %s", id.String(), err)
 				return
 			}
-		}()
+		}(id)
 	}
 
 	wg.Wait()

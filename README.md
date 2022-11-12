@@ -60,16 +60,31 @@ information on operator workstations for monitoring and control.
     * [ ] CSV
     * [ ] MQTT
     * [ ] AMQP
+    * [ ] RabbitMq
     * [ ] Kafka
-    * [ ] gRPC
+    * [ ] gRPC Server
+    * [ ] gRPC Client
+    * [ ] Redis PubSub
+    * [ ] InfluxDB
     * [x] REST
     * [x] Request Http
     * [x] Sql (Postgres, Mysql, Sqlite, Sqlserver)
 * [x] Open telemetry
-    * [ ] Tracing
+    * [x] Tracing
     * [ ] Metrics
     * [ ] Logs
     * [ ] Custom exporter
+* [ ] Persistent Cron job and queue
+    * [X] Queue
+        * [X] Manager
+        * [X] Providers
+            * [X] Postgres
+            * [X] In memory
+    * [ ] Cron
+        * [x] Manager
+        * [x] Providers
+            * [ ] Postgres
+            * [x] In memory
 * [ ] Internationalization
 * [ ] Prometheus metrics
 * [ ] Metrics dashboard
@@ -79,6 +94,15 @@ information on operator workstations for monitoring and control.
     * [ ] Queue
     * [ ] Run scripts
 * [ ] Swagger
+* [ ] Release
+    * [ ] Create multiple bin files for different platforms
+    * [ ] Create docker image
+* [ ] Docker
+    * [ ] Docker file
+    * [ ] Docker hub
+    * [ ] Docker compose
+    * [ ] Kubernetes
+    * [ ] Helm
 * [ ] Load data sources runtime across a cluster of s-gobr with consensus and then create a k8s operator
     * [ ] Consensus Raft
 * [ ] Control with script
@@ -93,6 +117,7 @@ information on operator workstations for monitoring and control.
 * [ ] Support for multiple database as main and time series
     * [ ] Sqlite
     * [x] Postgres
+    * [ ] File (Sqlite)
 
 ### Building the application
 

@@ -12,6 +12,22 @@ type InMemoryProvider struct {
 	jobs          map[string]*JobEntity
 }
 
+func (i *InMemoryProvider) GetJobsTimeAndId(ctx context.Context, jobId string, time time.Time) (*ScheduledJob, error) {
+	scheduledJobs, ok := i.scheduledJobs[jobId]
+
+	if !ok {
+		return nil, nil
+	}
+
+	for _, scheduledJob := range scheduledJobs {
+		if scheduledJob.at.Equal(time) {
+			return scheduledJob, nil
+		}
+	}
+
+	return nil, nil
+}
+
 func NewInMemoryProvider() *InMemoryProvider {
 	return &InMemoryProvider{
 		scheduledJobs: map[string][]*ScheduledJob{},

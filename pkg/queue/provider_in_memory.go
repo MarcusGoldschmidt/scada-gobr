@@ -36,7 +36,7 @@ type nackError struct {
 
 type queueAck struct {
 	ackTime *time.Time
-	errors  []nackError
+	errors  []*nackError
 }
 
 type ProviderInMemory struct {
@@ -72,7 +72,7 @@ func (i *ProviderInMemory) Enqueue(ctx context.Context, queue string, data any) 
 		msg := newInMemoryMessage(ctx, data)
 		i.queueAck[queue+msg.id] = &queueAck{
 			ackTime: nil,
-			errors:  make([]nackError, 0),
+			errors:  make([]*nackError, 0),
 		}
 		queueChan <- msg
 	}()
@@ -124,7 +124,7 @@ func (i *ProviderInMemory) Nack(ctx context.Context, queue string, messageId str
 
 	now := i.timeProvider.GetCurrentTime()
 
-	ack.errors = append(ack.errors, nackError{
+	ack.errors = append(ack.errors, &nackError{
 		err:  err,
 		time: now,
 	})

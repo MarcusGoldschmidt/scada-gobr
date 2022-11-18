@@ -2,25 +2,12 @@ package pkg
 
 import (
 	"context"
-	"fmt"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/scheduler"
 	"testing"
 	"time"
 )
-
-type Printa interface {
-	Printa(msg string)
-}
-
-type Teste struct {
-	name string
-}
-
-func (t Teste) Printa(msg string) {
-	fmt.Printf("msg: %s", msg)
-}
 
 func newSchedulerManager(t *testing.T) *SchedulerManager {
 	scada := &Scadagobr{}

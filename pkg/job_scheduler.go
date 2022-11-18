@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"context"
+	"errors"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/queue"
@@ -14,6 +15,12 @@ import (
 )
 
 var schedulerTypeRegistry = map[string]reflect.Type{}
+
+// erros
+var (
+	ErrJobNotFound         = errors.New("job not found")
+	ErrJobAlreadyScheduled = errors.New("job already scheduled")
+)
 
 type SchedulerManager struct {
 	schedulerProvider scheduler.Provider
@@ -153,6 +160,41 @@ func (m *SchedulerManager) Stop() error {
 	return nil
 }
 
+func (m *SchedulerManager) ScheduleNextExecution(ctx context.Context, jobId string) error {
+	entity, err := m.schedulerProvider.GetJobById(ctx, jobId)
+
+	if err != nil {
+		return err
+	}
+
+	var nextTime time.Time
+
+	if entity.NextExecution != nil {
+		nextTime = *entity.NextExecution
+	} else if entity.Cron != "" {
+		cronParse, err := cronexpr.Parse(entity.Cron)
+
+		if err != nil {
+			return err
+		}
+
+		nextTime = cronParse.Next(m.timeProvider.GetCurrentTime())
+	} else {
+		return errors.New("no cron or next execution time found for job: " + entity.JobId)
+	}
+
+	jobExist, err := m.schedulerProvider.GetJobsTimeAndId(ctx, entity.JobId, nextTime)
+	if err != nil {
+		return err
+	}
+
+	if jobExist != nil {
+		return ErrJobAlreadyScheduled
+	}
+
+	return m.schedulerProvider.ScheduleJobTime(ctx, nextTime, entity.JobId)
+}
+
 func (m *SchedulerManager) Start(ctx context.Context, verificationTimes ...time.Duration) {
 	verificationTime := time.Minute
 
@@ -196,6 +238,11 @@ func (m *SchedulerManager) Start(ctx context.Context, verificationTimes ...time.
 					err := m.queueProvider().Enqueue(ctx, "scheduler:"+job.TypeName(), struct{}{})
 					if err != nil {
 						m.logger.Errorf("Failed to enqueue job: %s", err)
+					}
+
+					err = m.ScheduleNextExecution(ctx, job.JobId())
+					if err != nil && err != ErrJobAlreadyScheduled {
+						m.logger.Errorf("Failed to schedule next execution: %s", err)
 					}
 				}(job)
 			}

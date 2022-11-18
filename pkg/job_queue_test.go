@@ -67,7 +67,7 @@ func TestManagerAddJobThenStop(t *testing.T) {
 
 func TestManagerAddJob(t *testing.T) {
 	ctx := context.Background()
-	manager, queue := createQueueManagerTest(t)
+	manager, queueProvider := createQueueManagerTest(t)
 
 	go manager.Start(ctx)
 
@@ -79,7 +79,7 @@ func TestManagerAddJob(t *testing.T) {
 		return nil
 	}))
 
-	err := queue.Enqueue(ctx, "test", 1)
+	err := queueProvider.Enqueue(ctx, "test", 1)
 	if err != nil {
 		t.Error(err)
 		return

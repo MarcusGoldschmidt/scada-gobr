@@ -1,0 +1,15 @@
+---
+import type { MarkdownHeading } from "astro";
+
+type Props = {
+    title: string;
+    headings: MarkdownHeading[];
+};
+const { title, headings } = Astro.props as Props;
+---
+
+<article id="article">
+    <section>
+        <slot />
+    </section>
+</article>

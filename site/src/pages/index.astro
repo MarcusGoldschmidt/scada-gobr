@@ -1,0 +1,42 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Homepage from "../components/Homepage.astro";
+import Features from "../components/features/index.astro";
+import Footer from "../components/Footer.astro";
+import { Icon } from "astro-icon";
+---
+
+<Layout title="ScadagoBR">
+	<main>
+		<Homepage />
+
+		<div class="pb-20">
+			<Features />
+		</div>
+
+		<div class="py-20 bg-white">
+			<div class="grid gap-4 grid-cols-2 gap-4 max-w-7xl mx-auto">
+				<div>
+					<Icon name="control_panel" />
+				</div>
+				<div class="pl-20">
+					<p class="font-bold tracking-tight sm:text-6xl">
+						Take control of your data
+					</p>
+					<p class="text-gray-600 mt-10 sm:text-xl">
+						ScadagoBR is a free, open-source, and self-hosted
+						application. You can choose to install it on your own
+						server or use a hosted version. You can also contribute
+						to the codebase and help us improve the application.
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<div class="pb-20">
+			<Footer />
+		</div>
+	</main>
+</Layout>
+
+<style></style>

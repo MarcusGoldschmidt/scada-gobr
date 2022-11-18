@@ -1,0 +1,42 @@
+---
+import type { MarkdownHeading } from "astro";
+import ReadArticle from "../components/ReadArticle.astro";
+import Sidebar from "../components/Sidebar.astro";
+import TableOfContent from "../components/TableOfContent.astro";
+import type { Frontmatter } from "../config";
+import Layout from "../layouts/Layout.astro";
+
+import "../styles/docs.css";
+
+export interface Props {
+    frontmatter: Frontmatter;
+    headings: MarkdownHeading[];
+}
+
+const { frontmatter, headings } = Astro.props;
+
+const posts = await Astro.glob("/src/pages/docs/*.md");
+
+const currentPage = Astro.url.pathname;
+const currentFile = `/src/pages/docs/${currentPage.replace(/\/$/, "")}.md`;
+---
+
+<Layout title={`${frontmatter.title} - GOBR Docs`}>
+    <div class="fixed p-6 bg-white w-2/12">
+        <Sidebar posts={posts} />
+    </div>
+
+    <div class="fixed p-6 right-0 bg-white w-2/12">
+        <TableOfContent headings={headings} />
+    </div>
+
+    <div class="flex flex-col items-start pt-6 flex-nowrap min-h-full">
+        <div class="mx-auto">
+            <ReadArticle title={frontmatter.title} headings={}>
+                <slot />
+            </ReadArticle>
+        </div>
+    </div>
+</Layout>
+
+<style></style>

@@ -1,0 +1,42 @@
+---
+import FeatCard from "./FeatCard.astro";
+---
+<p id="features" class="mt-10 font-bold tracking-tight text-center sm:text-4xl">Features</p>
+
+<div class="mt-10 flex justify-center gap-4 flex-wrap max-w-7xl mx-auto">
+    <FeatCard
+        title="Multiple datasources"
+        description="Like Postgres, Mysql, Sqlite, Sqlserver and Rest (more coming soon!)"
+    />
+    <FeatCard
+        title="Graphical Views Builder"
+        description="Create views with custom data visualization"
+        development="Work in progress"
+    />
+    <FeatCard
+        title="Simple deploy"
+        description="Execute just one executable and get your own scada running"
+        development="Work in progress"
+    />
+    <FeatCard
+        title="Notifications"
+        description="Email, SMS and webhooks notifications"
+        development="Work in progress"
+    />
+    <FeatCard
+        title="Script"
+        description="Create your own routines and integration with internal and external events"
+        development="Work in progress"
+    />
+    <FeatCard
+        title="Suport for many databases"
+        description="Deploy with just some files as database or with a large database like postgres"
+        development="Work in progress"
+    />
+</div>
+
+<style>
+    .center-flex {
+        margin: 0 auto;
+    }
+</style>

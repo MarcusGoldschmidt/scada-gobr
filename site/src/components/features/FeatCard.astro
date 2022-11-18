@@ -1,0 +1,34 @@
+---
+import { Icon } from "astro-icon";
+
+export interface Props {
+    title: string;
+    description: string;
+    development?: string;
+}
+
+const { title, description, development } = Astro.props;
+---
+
+<div
+    class="relative basis-1/3 p-5 text-center max-w-sm bg-white rounded-xl shadow-lg space-x-4"
+>
+    {
+        development && (
+            <div title={development} class="absolute top-0 right-0 text-right">
+                <Icon class="text-red-700 w-1/12" name="mdi:information" />
+            </div>
+        )
+    }
+
+    <div>
+        <div class="text-xl font-medium text-black">{title}</div>
+        <p class="text-slate-500">{description}</p>
+    </div>
+</div>
+
+<style>
+    svg {
+        display: inline;
+    }
+</style>

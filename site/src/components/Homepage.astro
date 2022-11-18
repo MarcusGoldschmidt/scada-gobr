@@ -1,0 +1,74 @@
+---
+import Menu from "./Menu.astro";
+
+---
+
+<div class="isolate bg-white">
+    <div class="px-6 pt-6 lg:px-8">
+        <div>
+            <Menu
+                options={[
+                    {
+                        title: "Features",
+                        href: "#features",
+                    },
+                    {
+                        title: "Docs",
+                        href: "/docs",
+                    },
+                    {
+                        title: "Roadmap",
+                        href: "https://github.com/MarcusGoldschmidt/scada-gobr/blob/main/README.md#roadmap",
+                    },
+                    {
+                        title: "Github",
+                        href: "https://github.com/MarcusGoldschmidt/scada-gobr",
+                    },
+                ]}
+            />
+        </div>
+    </div>
+    <div class="relative px-6 lg:px-8">
+        <div class="mx-auto max-w-3xl pt-20 pb-32 sm:pt-48 sm:pb-40">
+            <div>
+                <div>
+                    <h1
+                        class="text-4xl font-bold tracking-tight sm:text-center sm:text-6xl"
+                    >
+                        Your own Scada free
+                    </h1>
+                    <p
+                        class="mt-6 text-lg leading-8 text-gray-600 sm:text-center"
+                    >
+                        Open Source, web-based, multi-platform solution
+                        for building your own SCADA (Supervisory Control
+                        and Data Acquisition) system inspired by
+                        <a href="http://scada-lts.org/">ScadaLTS</a>. Code released under the <a href="https://github.com/SCADA-LTS/Scada-LTS/blob/develop/LICENSE">GPL license</a>
+                    </p>
+                    <div class="mt-8 flex gap-x-4 sm:justify-center">
+                        <a
+                            href="#"
+                            class="inline-block rounded-lg bg-indigo-600 px-4 py-1.5 text-base font-semibold leading-7 text-white shadow-sm ring-1 ring-indigo-600 hover:bg-indigo-700 hover:ring-indigo-700"
+                        >
+                            Get started
+                            <span
+                                class="text-indigo-200"
+                                aria-hidden="true">&rarr;</span
+                            >
+                        </a>
+                        <a
+                            href="/docs"
+                            class="inline-block rounded-lg px-4 py-1.5 text-base font-semibold leading-7 text-gray-900 ring-1 ring-gray-900/10 hover:ring-gray-900/20"
+                        >
+                            Docs
+                            <span
+                                class="text-gray-400"
+                                aria-hidden="true">&rarr;</span
+                            >
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

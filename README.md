@@ -16,11 +16,11 @@ networks, and graphical user interfaces to monitor and control a process. A SCAD
 from remote field devices, such as sensors and switches, via a communication network and presents the
 information on operator workstations for monitoring and control.
 
-### Tech stack
+### Observation!
 
-* Go lang
-* Postgres with timescale DB for time series
-* React for web client
+This project is in the early stages of development. The project is not yet ready for production use.
+
+This stage do not support multiple instances of the application, needs distributed lock for some features
 
 ### Roadmap
 
@@ -88,11 +88,6 @@ information on operator workstations for monitoring and control.
 * [ ] Internationalization
 * [ ] Prometheus metrics
 * [ ] Metrics dashboard
-* [ ] Schedule
-    * [ ] Cron like
-    * [ ] Persistent
-    * [ ] Queue
-    * [ ] Run scripts
 * [ ] Swagger
 * [ ] Release
     * [ ] Create multiple bin files for different platforms
@@ -114,6 +109,7 @@ information on operator workstations for monitoring and control.
         * [ ] Email
         * [ ] SMS
         * [ ] Webhook
+* [ ] OS Ui for basic configuration for non developers users
 * [ ] Support for multiple database as main and time series
     * [ ] Sqlite
     * [x] Postgres
@@ -144,7 +140,7 @@ go run cmd/api/api.go
 # Setup web client (with another terminal)
 cd scadagobr-client
 # Instal the dependencies
-npm i
+yarn
 npm run dev
 ```
 
@@ -152,3 +148,7 @@ npm run dev
 
 1. Fork the repository
 2. Create a pull request
+3. Wait for review
+4. Merge
+5. Celebrate
+6. Repeat XD

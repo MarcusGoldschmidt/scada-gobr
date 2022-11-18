@@ -1,0 +1,42 @@
+---
+import type { MarkdownHeading } from "astro";
+type Props = {
+    headings: MarkdownHeading[];
+};
+const { headings } = Astro.props as Props;
+---
+
+<nav class="sidebar-nav min-h-full" aria-labelledby="grid-right">
+    <div class="sidebar-nav-inner">
+        <p
+            class="self-center text-xl font-bold whitespace-nowrap dark:text-white pb-6"
+        >
+            On this page
+        </p>
+
+        {
+            headings.map((e) => (
+                <>
+                    <a href={`#${e.slug}`}>{e.text}</a>
+                    <br />
+                </>
+            ))
+        }
+    </div>
+</nav>
+
+<style>
+    .sidebar-nav {
+        width: 100%;
+        position: absolute;
+        position: sticky;
+        top: 0;
+        right: 0;
+    }
+    .sidebar-nav-inner {
+        min-height: 100vh;
+        padding: 0;
+        padding-top: var(--doc-padding);
+        overflow: auto;
+    }
+</style>

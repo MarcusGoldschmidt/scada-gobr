@@ -1,0 +1,60 @@
+---
+import type { MarkdownInstance } from "astro";
+type Props = {
+    posts: MarkdownInstance<Record<string, any>>[];
+};
+const { posts } = Astro.props as Props;
+
+const sections: Record<string, MarkdownInstance<Record<string, any>>[]> =
+    posts.reduce((acc, e) => {
+        const { section } = e.frontmatter;
+
+        //@ts-ignore
+        acc[section] = acc[section] ?? [];
+        //@ts-ignore
+        acc[section].push(e);
+        return acc;
+    }, {});
+---
+
+<nav class="sidebar-nav min-h-full" aria-labelledby="grid-right">
+    <div class="sidebar-nav-inner">
+        <a href="/" class="flex items-center mb-6">
+            <span
+                class="self-center text-xl font-bold whitespace-nowrap dark:text-white"
+                >SCADA-GOBR</span
+            >
+        </a>
+
+        {
+            Object.keys(sections).map((e) => (
+                <div>
+                    <p class="font-semibold text-md mt-4">{e}</p>
+
+                    {sections[e].map((post) => (
+                        <a
+                            href={post.url}
+                            class="px-4 py-1.5 text-base text-gray-600"
+                        >
+                            {post.frontmatter.title}
+                        </a>
+                    ))}
+                </div>
+            ))
+        }
+    </div>
+</nav>
+
+<style>
+    .sidebar-nav {
+        width: 100%;
+        position: sticky;
+        top: 0;
+    }
+    .sidebar-nav-inner {
+        min-height: 100vh;
+        padding: 0;
+        padding-top: var(--doc-padding);
+        overflow: auto;
+    }
+</style>

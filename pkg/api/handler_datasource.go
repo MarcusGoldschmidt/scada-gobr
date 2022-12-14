@@ -1,4 +1,4 @@
-package pkg
+package api
 
 import (
 	"encoding/json"
@@ -15,18 +15,18 @@ import (
 	"time"
 )
 
-func GetDataSourcesRuntime(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func GetDataSourcesRuntime(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	s.respondJsonOk(r.Context(), w, s.RuntimeManager.GetAllDataSources())
 }
 
-func GetDataSourceTypesHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func GetDataSourceTypesHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	s.respondJsonOk(r.Context(), w, datasources.DataSourceTypes)
 }
 
-func GetDataSourcesHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func GetDataSourcesHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	sources, err := s.dataSourcePersistence.GetDataSources(ctx)
+	sources, err := s.DataSourcePersistence.GetDataSources(ctx)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -43,7 +43,7 @@ func GetDataSourcesHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request)
 	s.respondJsonOk(ctx, w, sources)
 }
 
-func GetDataSourceByIdHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func GetDataSourceByIdHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
@@ -52,7 +52,7 @@ func GetDataSourceByIdHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	datasource, err := s.dataSourcePersistence.GetDataSourceById(ctx, id)
+	datasource, err := s.DataSourcePersistence.GetDataSourceById(ctx, id)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -73,7 +73,7 @@ type createDataSource struct {
 	Type models.DataSourceType `json:"type"`
 }
 
-func CreateDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func CreateDataSourceHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	command, err := server.ReadJson[createDataSource](r)
@@ -82,7 +82,7 @@ func CreateDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	existDataSource, err := s.dataSourcePersistence.GetDataSourceByName(ctx, command.Name)
+	existDataSource, err := s.DataSourcePersistence.GetDataSourceByName(ctx, command.Name)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -105,7 +105,7 @@ func CreateDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	err = s.dataSourcePersistence.CreateDataSource(ctx, datasource)
+	err = s.DataSourcePersistence.CreateDataSource(ctx, datasource)
 	if err != nil {
 		return
 	}
@@ -113,7 +113,7 @@ func CreateDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 	s.respondJsonOk(ctx, w, command)
 }
 
-func EditDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func EditDataSourceHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
@@ -139,7 +139,7 @@ func EditDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	datasource, err := s.dataSourcePersistence.GetDataSourceById(ctx, id)
+	datasource, err := s.DataSourcePersistence.GetDataSourceById(ctx, id)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -156,7 +156,7 @@ func EditDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request)
 	s.respondJsonOk(ctx, w, command)
 }
 
-func DeleteDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func DeleteDataSourceHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
@@ -165,14 +165,14 @@ func DeleteDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	datapoints, err := s.dataSourcePersistence.GetDataPoints(ctx, id)
+	datapoints, err := s.DataSourcePersistence.GetDataPoints(ctx, id)
 
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
 	}
 
-	err = s.dataSourcePersistence.DeleteDataSource(ctx, id)
+	err = s.DataSourcePersistence.DeleteDataSource(ctx, id)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -189,7 +189,7 @@ func DeleteDataSourceHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 	for _, datapoint := range datapoints {
 		go func(datapoint *models.DataPoint) {
 			defer wg.Done()
-			_ = s.dataPointPersistence.DeleteDataPointValueById(ctx, datapoint.Id)
+			_ = s.DataPointPersistence.DeleteDataPointValueById(ctx, datapoint.Id)
 		}(datapoint)
 	}
 

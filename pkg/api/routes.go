@@ -1,45 +1,42 @@
-package pkg
+package api
 
 import (
-	scadaServer "github.com/MarcusGoldschmidt/scadagobr/pkg/server"
 	"net/http"
-	"strconv"
-	"time"
 )
 
-type RequestHandlerFunction func(scada *Scadagobr, w http.ResponseWriter, r *http.Request)
+type RequestHandlerFunction func(scada *ScadaApi, w http.ResponseWriter, r *http.Request)
 
-func (s *Scadagobr) handleRequest(function RequestHandlerFunction) http.HandlerFunc {
+func (s *ScadaApi) handleRequest(function RequestHandlerFunction) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		function(s, w, r)
 	}
 }
 
-func (s *Scadagobr) get(path string, f RequestHandlerFunction) {
+func (s *ScadaApi) get(path string, f RequestHandlerFunction) {
 	s.router.HandleFunc(path, s.handleRequest(f)).Methods("GET")
 }
 
 // Post wraps the router for POST method
-func (s *Scadagobr) post(path string, f RequestHandlerFunction) {
+func (s *ScadaApi) post(path string, f RequestHandlerFunction) {
 	s.router.HandleFunc(path, s.handleRequest(f)).Methods("POST")
 }
 
 // Put wraps the router for PUT method
-func (s *Scadagobr) put(path string, f RequestHandlerFunction) {
+func (s *ScadaApi) put(path string, f RequestHandlerFunction) {
 	s.router.HandleFunc(path, s.handleRequest(f)).Methods("PUT")
 }
 
 // Delete wraps the router for DELETE method
-func (s *Scadagobr) delete(path string, f RequestHandlerFunction) {
+func (s *ScadaApi) delete(path string, f RequestHandlerFunction) {
 	s.router.HandleFunc(path, s.handleRequest(f)).Methods("DELETE")
 }
 
-func (s *Scadagobr) setRouters() {
+func (s *ScadaApi) setRouters() {
 	s.setupLogs()
 	s.setupCors()
 	s.setupProviders()
 
-	s.router.Handle("/api/datasource/integration", s.internalRoute)
+	s.router.Handle("/api/datasource/integration", s.Scadagobr.InternalRouter)
 
 	s.get("/api/healthcheck", HealthCheckHandler)
 
@@ -91,25 +88,4 @@ func (s *Scadagobr) setRouters() {
 	s.put("/api/v1/view/{id}", s.authAndIsAdminMiddleware(UpdateViewHandler))
 	s.delete("/api/v1/view/{id}", s.authAndIsAdminMiddleware(DeleteViewHandler))
 	s.delete("/api/v1/view/{id}/component/{componentId}", s.authAndIsAdminMiddleware(DeleteViewComponentHandler))
-}
-
-func (s *Scadagobr) setServer() error {
-	if s.server != nil {
-		return nil
-	}
-
-	err := scadaServer.SetupSpa(s.router)
-	if err != nil {
-		return err
-	}
-
-	s.server = &http.Server{
-		Handler:      s.router,
-		Addr:         s.Option.Address + ":" + strconv.Itoa(s.Option.Port),
-		TLSConfig:    s.Option.TLSConfig,
-		WriteTimeout: 30 * time.Second,
-		ReadTimeout:  30 * time.Second,
-	}
-
-	return nil
 }

@@ -29,7 +29,6 @@ func DataPointToRuntimeSql(dp *models.DataPoint) (*datasources.SqlDataPoint, err
 }
 
 func DataPointToRuntimeRandom(dp *models.DataPoint) (*datasources.RandomValueDataPoint, error) {
-
 	fun := func(common *datasources.DataPointCommon, data *models.DataPoint) (*datasources.RandomValueDataPoint, error) {
 		dsTypeData, err := shared.FromJson[models.DataPointTypeRandomValue](dp.Data)
 
@@ -81,7 +80,7 @@ func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (dataso
 	var worker datasources.DataSourceWorker
 
 	// TODO: refactor this
-	// Should I use glob?
+	// Should I use gob?
 	switch ds.Type {
 	case models.Sql:
 		dsTypeData, err := shared.FromJson[models.DataSourceTypeSql](ds.Data)
@@ -106,7 +105,7 @@ func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (dataso
 			dsTypeData.Query,
 			dsTypeData.ConnectionString,
 			ds.Id,
-			scada.dataPointPersistence,
+			scada.DataPointPersistence,
 		)
 		break
 	case models.RandomValue:
@@ -124,7 +123,7 @@ func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (dataso
 			dataPoints = append(dataPoints, random)
 		}
 
-		worker = datasources.NewRandomValueWorker(ds.Id, dsTypeData.Period, dataPoints, scada.dataPointPersistence)
+		worker = datasources.NewRandomValueWorker(ds.Id, dsTypeData.Period, dataPoints, scada.DataPointPersistence)
 		break
 	case models.HttpRequest:
 		dsTypeData, err := shared.FromJson[models.DataSourceTypeHttpRequest](ds.Data)
@@ -145,7 +144,7 @@ func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (dataso
 			Period:           dsTypeData.Period,
 			DataPoints:       dataPoints,
 			Method:           dsTypeData.Method,
-			Persistence:      scada.dataPointPersistence,
+			Persistence:      scada.DataPointPersistence,
 			BaseUrl:          dsTypeData.BaseUrl,
 			Client:           &http.Client{},
 			BodyTemplate:     dsTypeData.BodyTemplate,
@@ -174,10 +173,10 @@ func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (dataso
 
 		response := datasources.HttpServerWorker{
 			DataPoints:   dataPoints,
-			Persistence:  scada.dataPointPersistence,
+			Persistence:  scada.DataPointPersistence,
 			User:         dsTypeData.User,
 			PasswordHash: dsTypeData.PasswordHash,
-			Router:       scada.internalRoute,
+			Router:       scada.InternalRouter,
 			AtmDone:      0,
 			Endpoint:     dsTypeData.Endpoint,
 		}

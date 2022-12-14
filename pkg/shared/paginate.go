@@ -41,7 +41,7 @@ func NewPaginationRequest(r *http.Request) (*PaginationRequest, error) {
 	}, nil
 }
 
-func (p PaginationRequest) Offset() int {
+func (p *PaginationRequest) Offset() int {
 	return (p.Page - 1) * p.Size
 }
 

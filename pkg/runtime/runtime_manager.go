@@ -49,13 +49,18 @@ type Manager struct {
 	eventsManager events.HubManager
 }
 
-func NewRuntimeManager(logger logger.Logger, persistence persistence.DataPointPersistence, eventsManager events.HubManager, provider providers.TimeProvider) *Manager {
+func NewRuntimeManager(
+	logger logger.Logger,
+	persistence persistence.DataPointPersistence,
+	eventsManager events.HubManager,
+	timeProvider providers.TimeProvider,
+) *Manager {
 	return &Manager{
 		Logger:        logger,
 		mutex:         sync.RWMutex{},
 		dataSources:   make(map[shared.CommonId]*dataSourceController),
 		persistence:   persistence,
-		timeProvider:  provider,
+		timeProvider:  timeProvider,
 		options:       ManagerOptions{MaxRuntimeRetry: 5},
 		eventsManager: eventsManager,
 	}

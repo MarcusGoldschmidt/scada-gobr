@@ -6,6 +6,7 @@ import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/spf13/viper"
+	"strings"
 	"time"
 )
 
@@ -56,6 +57,9 @@ func DefaultOptions() *ScadagobrOptions {
 }
 
 func ParseOptions() (*ScadagobrOptions, error) {
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	viper.AutomaticEnv()
+
 	options := DefaultOptions()
 
 	mtls := viper.GetBool("mtls")
@@ -66,14 +70,14 @@ func ParseOptions() (*ScadagobrOptions, error) {
 	options.Address = viper.GetString("address")
 	options.Port = viper.GetInt("port")
 	options.Logfile = viper.GetString("logfile")
-	options.MaxRecvMsgSize = viper.GetInt("maxRecvMsgSize")
-	options.MetricsServer = viper.GetBool("metricsServer")
-	options.DevMode = viper.GetBool("devMode")
-	options.AdminPassword = viper.GetString("adminPassword")
-	options.RefreshExpiration = viper.GetDuration("refreshExpiration")
+	options.MaxRecvMsgSize = viper.GetInt("max-receive-message-size")
+	options.MetricsServer = viper.GetBool("metrics-server")
+	options.DevMode = viper.GetBool("dev-mode")
+	options.AdminPassword = viper.GetString("admin-password")
+	options.RefreshExpiration = viper.GetDuration("refresh-expiration")
 	options.Expiration = viper.GetDuration("expiration")
-	options.ShutdownWait = viper.GetDuration("shutdownWait")
-	options.PostgresConnectionString = viper.GetString("postgresConnectionString")
+	options.ShutdownWait = viper.GetDuration("shutdown-wait")
+	options.PostgresConnectionString = viper.GetString("postgres-connection-string")
 
 	location, err := time.LoadLocation(viper.GetString("timezone"))
 	if err != nil {

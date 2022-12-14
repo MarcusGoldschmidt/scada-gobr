@@ -1,4 +1,4 @@
-package pkg
+package api
 
 import (
 	"context"
@@ -10,20 +10,20 @@ import (
 	"strings"
 )
 
-func (s *Scadagobr) respondJsonOk(ctx context.Context, w http.ResponseWriter, payload interface{}) {
+func (s *ScadaApi) respondJsonOk(ctx context.Context, w http.ResponseWriter, payload interface{}) {
 	span := trace.SpanFromContext(ctx)
 	span.SetStatus(codes.Ok, "")
 
 	s.respondJson(ctx, w, http.StatusOK, payload)
 }
 
-func (s *Scadagobr) respondJsonCreated(ctx context.Context, w http.ResponseWriter, payload interface{}) {
+func (s *ScadaApi) respondJsonCreated(ctx context.Context, w http.ResponseWriter, payload interface{}) {
 	span := trace.SpanFromContext(ctx)
 	span.SetStatus(codes.Ok, "")
 	s.respondJson(ctx, w, http.StatusCreated, payload)
 }
 
-func (s *Scadagobr) respondJson(ctx context.Context, w http.ResponseWriter, status int, payload interface{}) {
+func (s *ScadaApi) respondJson(ctx context.Context, w http.ResponseWriter, status int, payload interface{}) {
 	response, err := json.Marshal(payload)
 	if err != nil {
 		s.respondError(ctx, w, err)
@@ -38,11 +38,11 @@ func (s *Scadagobr) respondJson(ctx context.Context, w http.ResponseWriter, stat
 	}
 }
 
-func (s *Scadagobr) respondBadRequest(ctx context.Context, w http.ResponseWriter, err error) {
+func (s *ScadaApi) respondBadRequest(ctx context.Context, w http.ResponseWriter, err error) {
 	s.respondJson(ctx, w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 }
 
-func (s *Scadagobr) respondError(ctx context.Context, w http.ResponseWriter, err error) {
+func (s *ScadaApi) respondError(ctx context.Context, w http.ResponseWriter, err error) {
 	span := trace.SpanFromContext(ctx)
 
 	if _, ok := err.(*validator.InvalidValidationError); ok {

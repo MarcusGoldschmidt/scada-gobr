@@ -1,4 +1,4 @@
-package pkg
+package api
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func GetDataPointByIdHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func GetDataPointByIdHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
@@ -22,7 +22,7 @@ func GetDataPointByIdHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	points, err := s.dataPointPersistence.GetDataPointById(ctx, id)
+	points, err := s.DataPointPersistence.GetDataPointById(ctx, id)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -31,7 +31,7 @@ func GetDataPointByIdHandler(s *Scadagobr, w http.ResponseWriter, r *http.Reques
 	s.respondJsonOk(ctx, w, points)
 }
 
-func GetDataPointsHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func GetDataPointsHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
@@ -40,7 +40,7 @@ func GetDataPointsHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	points, err := s.dataSourcePersistence.GetDataPoints(ctx, id)
+	points, err := s.DataSourcePersistence.GetDataPoints(ctx, id)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -57,7 +57,7 @@ type createDataPoint struct {
 	Data       map[string]any `json:"data"`
 }
 
-func CreateDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func CreateDataPointHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
@@ -72,7 +72,7 @@ func CreateDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	ds, err := s.dataSourcePersistence.GetDataSourceById(ctx, id)
+	ds, err := s.DataSourcePersistence.GetDataSourceById(ctx, id)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -94,7 +94,7 @@ func CreateDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = s.dataPointPersistence.CreateDataPoint(ctx, dataPoint)
+	err = s.DataPointPersistence.CreateDataPoint(ctx, dataPoint)
 	if err != nil {
 		return
 	}
@@ -114,7 +114,7 @@ func CreateDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request
 	s.respondJsonOk(ctx, w, dataPoint)
 }
 
-func EditDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func EditDataPointHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	vars := mux.Vars(r)
@@ -148,7 +148,7 @@ func EditDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	dataPoint, err := s.dataPointPersistence.GetDataPointById(ctx, dataPointId)
+	dataPoint, err := s.DataPointPersistence.GetDataPointById(ctx, dataPointId)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -170,7 +170,7 @@ func EditDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = s.dataPointPersistence.CreateDataPoint(ctx, dataPoint)
+	err = s.DataPointPersistence.CreateDataPoint(ctx, dataPoint)
 	if err != nil {
 		return
 	}
@@ -181,7 +181,7 @@ func EditDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = s.dataPointPersistence.UpdateDataPoint(ctx, dataPoint)
+	err = s.DataPointPersistence.UpdateDataPoint(ctx, dataPoint)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -196,7 +196,7 @@ func EditDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) 
 	s.respondJsonOk(ctx, w, dataPoint)
 }
 
-func DeleteDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func DeleteDataPointHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	vars := mux.Vars(r)
@@ -224,7 +224,7 @@ func DeleteDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = s.dataPointPersistence.DeleteDataPoint(ctx, id, dataPointId)
+	err = s.DataPointPersistence.DeleteDataPoint(ctx, id, dataPointId)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -236,7 +236,7 @@ func DeleteDataPointHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = s.dataPointPersistence.DeleteDataPointValueById(ctx, dataPointId)
+	err = s.DataPointPersistence.DeleteDataPointValueById(ctx, dataPointId)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return

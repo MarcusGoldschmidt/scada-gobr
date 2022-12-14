@@ -1,4 +1,4 @@
-package pkg
+package api
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ type loginRequest struct {
 	Password string
 }
 
-func LoginHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func LoginHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var request loginRequest
@@ -28,7 +28,7 @@ func LoginHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := s.userPersistence.GetUserByName(ctx, request.Username)
+	user, err := s.UserPersistence.GetUserByName(ctx, request.Username)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -51,7 +51,7 @@ func LoginHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	s.respondJsonOk(ctx, w, response)
 }
 
-func RefreshTokenHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func RefreshTokenHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var request map[string]string
@@ -76,7 +76,7 @@ func RefreshTokenHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	s.respondJsonOk(ctx, w, response)
 }
 
-func WhoAmIHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func WhoAmIHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	claims, err := auth.GetUserFromContext(r.Context())

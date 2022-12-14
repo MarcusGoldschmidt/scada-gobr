@@ -7,7 +7,7 @@ import (
 )
 
 func (s *Scadagobr) LoadDataSourcesRuntimeManager(ctx context.Context) ([]datasources.DataSourceRuntimeManager, error) {
-	ds, err := s.dataSourcePersistence.GetDataSources(ctx)
+	ds, err := s.DataSourcePersistence.GetDataSources(ctx)
 
 	if err != nil {
 		return nil, err
@@ -28,7 +28,7 @@ func (s *Scadagobr) LoadDataSourcesRuntimeManager(ctx context.Context) ([]dataso
 }
 
 func (s *Scadagobr) UpdateDataSource(ctx context.Context, id shared.CommonId) error {
-	ds, err := s.dataSourcePersistence.GetDataSourceById(ctx, id)
+	ds, err := s.DataSourcePersistence.GetDataSourceById(ctx, id)
 
 	if err != nil {
 		return err

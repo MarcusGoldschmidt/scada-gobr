@@ -33,6 +33,6 @@ clean:
 	rm api
 
 test:
-	mkdir ./pkg/server/public
+	mkdir -p ./pkg/server/public
 	go test ./...
 

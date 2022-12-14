@@ -11,9 +11,7 @@ import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/purge"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/runtime"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/server"
-	"github.com/gorilla/mux"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type Scadagobr struct {
@@ -23,21 +21,18 @@ type Scadagobr struct {
 	Option         *ScadagobrOptions
 
 	// Persistence
-	userPersistence       persistence.UserPersistence
-	dataPointPersistence  persistence.DataPointPersistence
-	dataSourcePersistence persistence.DataSourcePersistence
-	viewPersistence       persistence.ViewPersistence
+	UserPersistence       persistence.UserPersistence
+	DataPointPersistence  persistence.DataPointPersistence
+	DataSourcePersistence persistence.DataSourcePersistence
+	ViewPersistence       persistence.ViewPersistence
 
 	JwtHandler *auth.JwtHandler
 
-	server *http.Server
-	router *mux.Router
+	TimeProvider providers.TimeProvider
 
-	timeProvider providers.TimeProvider
+	InternalRouter *server.Router
 
-	internalRoute *server.Router
-
-	purgeManager *purge.Manager
+	PurgeManager *purge.Manager
 	HubManager   events.HubManager
 
 	// Created after the server is started
@@ -58,7 +53,7 @@ func (s *Scadagobr) Setup(ctx context.Context) error {
 		return err
 	}
 
-	err = s.userPersistence.CreateAdminUser(ctx, s.Option.AdminEmail, s.Option.AdminPassword)
+	err = s.UserPersistence.CreateAdminUser(ctx, s.Option.AdminEmail, s.Option.AdminPassword)
 	if err != nil {
 		return err
 	}
@@ -74,19 +69,17 @@ func (s *Scadagobr) Setup(ctx context.Context) error {
 }
 
 func (s *Scadagobr) Run(ctx context.Context) error {
-	ctx = context.WithValue(ctx, providers.TimeProviderCtxKey, s.timeProvider)
+	ctx = context.WithValue(ctx, providers.TimeProviderCtxKey, s.TimeProvider)
 	ctx, s.shutdownContext = context.WithCancel(ctx)
 
 	s.Logger.Infof("Starting Scadagobr")
 
-	go s.purgeManager.Work(ctx)
+	go s.PurgeManager.Work(ctx)
 
 	err := s.RuntimeManager.RunAll(ctx)
 	if err != nil {
 		return err
 	}
-
-	go s.ListenAndServeHttp(ctx)
 
 	return nil
 }
@@ -106,27 +99,8 @@ func (s *Scadagobr) SetupAndRun(ctx context.Context) error {
 	return nil
 }
 
-func (s *Scadagobr) ListenAndServeHttp(ctx context.Context) {
-	protocol := "https://"
-	if s.server.TLSConfig == nil {
-		protocol = "http://"
-	}
-
-	s.Logger.Infof("Start HTTP server with address: %s%s", protocol, s.server.Addr)
-
-	err := s.server.ListenAndServe()
-	if err != nil {
-		s.Logger.Infof("%s", err.Error())
-	}
-}
-
 func (s *Scadagobr) Shutdown(ctx context.Context) {
 	s.shutdownContext()
-
-	err := s.server.Shutdown(ctx)
-	if err != nil {
-		return
-	}
 
 	s.RuntimeManager.StopAll(ctx)
 	s.HubManager.ShutDown(ctx)

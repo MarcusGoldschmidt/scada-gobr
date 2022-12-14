@@ -1,4 +1,4 @@
-package pkg
+package api
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func HealthCheckHandler(scada *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func HealthCheckHandler(scada *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	server.Handler(
 		server.WithChecker(
 			"database", server.CheckerFunc(func(ctx context.Context) error {

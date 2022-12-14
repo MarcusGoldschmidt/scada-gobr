@@ -51,8 +51,8 @@ func (s *Scadagobr) Trace(ctx context.Context, action string, levels ...logger.L
 	ctx, span := util.Tracer.Start(ctx, action)
 
 	traceElapsed := &TraceElapsed{
-		timeProvider: s.timeProvider,
-		start:        s.timeProvider.GetCurrentTime(),
+		timeProvider: s.TimeProvider,
+		start:        s.TimeProvider.GetCurrentTime(),
 		logger:       s.Logger,
 		name:         action,
 		ctx:          ctx,

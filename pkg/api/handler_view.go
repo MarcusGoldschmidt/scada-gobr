@@ -1,4 +1,4 @@
-package pkg
+package api
 
 import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
@@ -8,10 +8,10 @@ import (
 	"net/http"
 )
 
-func GetViewsHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func GetViewsHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	views, err := s.viewPersistence.GetAllViews(r.Context())
+	views, err := s.ViewPersistence.GetAllViews(r.Context())
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -20,7 +20,7 @@ func GetViewsHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	s.respondJsonOk(ctx, w, views)
 }
 
-func GetViewByIdHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func GetViewByIdHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// TODO: verify if user has permission for `the view
@@ -30,7 +30,7 @@ func GetViewByIdHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	view, err := s.viewPersistence.GetViewById(r.Context(), viewId)
+	view, err := s.ViewPersistence.GetViewById(r.Context(), viewId)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -53,7 +53,7 @@ type ViewComponentRequest struct {
 	Data   map[string]any  `json:"data"`
 }
 
-func CreateViewHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func CreateViewHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	body, err := server.ValidateFromBody[ViewRequest](r)
@@ -67,7 +67,7 @@ func CreateViewHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		Name: body.Name,
 	}
 
-	err = s.viewPersistence.CreateView(r.Context(), view)
+	err = s.ViewPersistence.CreateView(r.Context(), view)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -85,7 +85,7 @@ func CreateViewHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err = s.viewPersistence.AttachViewComponents(r.Context(), viewComponents...)
+	err = s.ViewPersistence.AttachViewComponents(r.Context(), viewComponents...)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -94,7 +94,7 @@ func CreateViewHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func UpdateViewHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func UpdateViewHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	viewId, err := uuid.Parse(mux.Vars(r)["id"])
@@ -113,7 +113,7 @@ func UpdateViewHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		Name: body.Name,
 	}
 
-	err = s.viewPersistence.UpdateView(r.Context(), view)
+	err = s.ViewPersistence.UpdateView(r.Context(), view)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -131,7 +131,7 @@ func UpdateViewHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err = s.viewPersistence.AttachViewComponents(r.Context(), viewComponents...)
+	err = s.ViewPersistence.AttachViewComponents(r.Context(), viewComponents...)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -140,7 +140,7 @@ func UpdateViewHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func DeleteViewHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func DeleteViewHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	viewId, err := uuid.Parse(mux.Vars(r)["id"])
@@ -149,7 +149,7 @@ func DeleteViewHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.viewPersistence.DeleteView(r.Context(), viewId)
+	err = s.ViewPersistence.DeleteView(r.Context(), viewId)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -158,7 +158,7 @@ func DeleteViewHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func DeleteViewComponentHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func DeleteViewComponentHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	viewId, err := uuid.Parse(mux.Vars(r)["id"])
@@ -173,7 +173,7 @@ func DeleteViewComponentHandler(s *Scadagobr, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	err = s.viewPersistence.DeleteViewComponent(r.Context(), viewId, componentId)
+	err = s.ViewPersistence.DeleteViewComponent(r.Context(), viewId, componentId)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return

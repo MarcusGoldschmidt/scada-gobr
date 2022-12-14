@@ -1,4 +1,4 @@
-package pkg
+package api
 
 import (
 	"errors"
@@ -22,7 +22,7 @@ type UserResponse struct {
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
-func GetUsersHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func GetUsersHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	request, err := shared.NewPaginationRequest(r)
@@ -31,7 +31,7 @@ func GetUsersHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users, err := s.userPersistence.GetUsers(ctx, request)
+	users, err := s.UserPersistence.GetUsers(ctx, request)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -40,7 +40,7 @@ func GetUsersHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	s.respondJsonOk(ctx, w, users)
 }
 
-func GetUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func GetUserHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
@@ -61,7 +61,7 @@ func GetUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := s.userPersistence.GetUserById(ctx, id)
+	user, err := s.UserPersistence.GetUserById(ctx, id)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -90,7 +90,7 @@ func (r *CreateUserRequest) ToUser() *models.User {
 	}
 }
 
-func CreateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func CreateUserHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	request, err := server.ValidateFromBody[CreateUserRequest](r)
@@ -107,7 +107,7 @@ func CreateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	userName, err := s.userPersistence.GetUserByName(ctx, request.Name)
+	userName, err := s.UserPersistence.GetUserByName(ctx, request.Name)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -120,7 +120,7 @@ func CreateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 
 	user := request.ToUser()
 
-	err = s.userPersistence.CreateUser(ctx, user)
+	err = s.UserPersistence.CreateUser(ctx, user)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -137,7 +137,7 @@ type UpdateUserRequest struct {
 	Password      string `validate:"omitempty,gte=6"`
 }
 
-func UpdateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func UpdateUserHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
@@ -166,13 +166,13 @@ func UpdateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	user, err := s.userPersistence.GetUserById(ctx, id)
+	user, err := s.UserPersistence.GetUserById(ctx, id)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
 	}
 
-	valid, err := s.userPersistence.IsValidUsernameForUser(ctx, request.Name, user.ID)
+	valid, err := s.UserPersistence.IsValidUsernameForUser(ctx, request.Name, user.ID)
 
 	if err != nil {
 		s.respondError(ctx, w, err)
@@ -197,7 +197,7 @@ func UpdateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		user.PasswordHash, _ = auth.MakeHash(request.Password)
 	}
 
-	err = s.userPersistence.UpdateUser(ctx, user)
+	err = s.UserPersistence.UpdateUser(ctx, user)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return
@@ -206,7 +206,7 @@ func UpdateUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 	s.respondJsonOk(ctx, w, map[string]any{})
 }
 
-func DeleteUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func DeleteUserHandler(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	id, err := uuid.Parse(mux.Vars(r)["id"])
@@ -231,7 +231,7 @@ func DeleteUserHandler(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.userPersistence.DeleteUser(ctx, id)
+	err = s.UserPersistence.DeleteUser(ctx, id)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return

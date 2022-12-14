@@ -6,6 +6,7 @@ import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/events"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/persistence/in_memory"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/google/uuid"
 	"os"
 	"testing"
@@ -17,7 +18,7 @@ func TestSimpleRuntime(t *testing.T) {
 
 	log := logger.NewSimpleLogger("teste", os.Stdout)
 
-	rt := NewRuntimeManager(log, in_memory.NewInMemoryPersistence(), events.NewHubManagerImpl(log))
+	rt := NewRuntimeManager(log, in_memory.NewInMemoryPersistence(), events.NewHubManagerImpl(log), providers.DefaultTimeProvider)
 
 	testLogger := logger.NewTestLogger(t)
 

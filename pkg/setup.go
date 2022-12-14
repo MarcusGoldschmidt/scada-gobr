@@ -8,7 +8,6 @@ import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/purge"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/runtime"
 	scadaServer "github.com/MarcusGoldschmidt/scadagobr/pkg/server"
-	"github.com/gorilla/mux"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"os"
@@ -44,23 +43,15 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 		Logger:                loggerImp,
 		Db:                    db,
 		Option:                opt,
-		router:                mux.NewRouter(),
 		JwtHandler:            SetupJwtHandler(opt, userPersistence),
-		userPersistence:       userPersistence,
-		dataSourcePersistence: dataSourcePersistence,
-		dataPointPersistence:  dataPointPersistence,
-		viewPersistence:       viewPersistence,
-		internalRoute:         scadaServer.NewRouter(),
-		purgeManager:          purgeManager,
+		UserPersistence:       userPersistence,
+		DataSourcePersistence: dataSourcePersistence,
+		DataPointPersistence:  dataPointPersistence,
+		ViewPersistence:       viewPersistence,
+		InternalRouter:        scadaServer.NewRouter(),
+		PurgeManager:          purgeManager,
 		HubManager:            hubManager,
-		timeProvider:          timeProvider,
-	}
-
-	scada.setRouters()
-
-	err = scada.setServer()
-	if err != nil {
-		return nil, err
+		TimeProvider:          timeProvider,
 	}
 
 	return scada, nil

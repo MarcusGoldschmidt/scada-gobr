@@ -1,4 +1,4 @@
-package pkg
+package api
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func (s *Scadagobr) setupCors() {
+func (s *ScadaApi) setupCors() {
 	s.router.Use(mux.CORSMethodMiddleware(s.router))
 
 	s.router.Use(func(next http.Handler) http.Handler {
@@ -28,17 +28,17 @@ func (s *Scadagobr) setupCors() {
 	})
 }
 
-func (s *Scadagobr) setupProviders() {
+func (s *ScadaApi) setupProviders() {
 	s.router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), providers.TimeProviderCtxKey, s.timeProvider)
+			ctx := context.WithValue(r.Context(), providers.TimeProviderCtxKey, s.TimeProvider)
 			r.WithContext(ctx)
 			next.ServeHTTP(w, r)
 		})
 	})
 }
 
-func (s *Scadagobr) setupLogs() {
+func (s *ScadaApi) setupLogs() {
 	s.router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			s.Logger.Tracef("Request at %s", r.RequestURI)
@@ -56,8 +56,8 @@ func (s *Scadagobr) setupLogs() {
 	})
 }
 
-func (s *Scadagobr) jwtMiddleware(function RequestHandlerFunction) RequestHandlerFunction {
-	return func(scada *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func (s *ScadaApi) jwtMiddleware(function RequestHandlerFunction) RequestHandlerFunction {
+	return func(scada *ScadaApi, w http.ResponseWriter, r *http.Request) {
 		reqToken := r.Header.Get("Authorization")
 		splitToken := strings.Split(reqToken, "Bearer ")
 		reqToken = splitToken[1]
@@ -76,8 +76,8 @@ func (s *Scadagobr) jwtMiddleware(function RequestHandlerFunction) RequestHandle
 	}
 }
 
-func (s *Scadagobr) adminMiddleware(function RequestHandlerFunction) RequestHandlerFunction {
-	return func(scada *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func (s *ScadaApi) adminMiddleware(function RequestHandlerFunction) RequestHandlerFunction {
+	return func(scada *ScadaApi, w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
 		claims, err := auth.GetUserFromContext(ctx)
@@ -95,7 +95,7 @@ func (s *Scadagobr) adminMiddleware(function RequestHandlerFunction) RequestHand
 	}
 }
 
-func (s *Scadagobr) authAndIsAdminMiddleware(function RequestHandlerFunction) RequestHandlerFunction {
+func (s *ScadaApi) authAndIsAdminMiddleware(function RequestHandlerFunction) RequestHandlerFunction {
 	return MultipleMiddleware(function, s.jwtMiddleware, s.adminMiddleware)
 }
 

@@ -1,4 +1,4 @@
-package pkg
+package api
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ import (
 	"sync"
 )
 
-func GetWsTimeSeriesViewComponent(s *Scadagobr, w http.ResponseWriter, r *http.Request) {
+func GetWsTimeSeriesViewComponent(s *ScadaApi, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	viewComponentId, err := uuid.Parse(mux.Vars(r)["id"])
@@ -33,7 +33,7 @@ func GetWsTimeSeriesViewComponent(s *Scadagobr, w http.ResponseWriter, r *http.R
 		}
 	}(conn)
 
-	viewComponent, err := s.viewPersistence.GetViewComponentById(ctx, viewComponentId)
+	viewComponent, err := s.ViewPersistence.GetViewComponentById(ctx, viewComponentId)
 	if err != nil {
 		s.respondError(ctx, w, err)
 		return

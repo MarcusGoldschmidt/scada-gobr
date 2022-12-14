@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg"
+	"github.com/MarcusGoldschmidt/scadagobr/pkg/api"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
@@ -33,12 +34,12 @@ func newCommand(ctx context.Context) (*cobra.Command, error) {
 				return err
 			}
 
-			scada, err := pkg.DefaultScadagobr(opt)
+			scadaApi, err := api.DefaultScadaApi(opt)
 			if err != nil {
 				return err
 			}
 
-			err = scada.SetupAndRun(ctx)
+			err = scadaApi.SetupAndRun(ctx)
 			if err != nil {
 				return err
 			}
@@ -50,7 +51,7 @@ func newCommand(ctx context.Context) (*cobra.Command, error) {
 			ctx, cancel := context.WithTimeout(ctx, opt.ShutdownWait)
 			defer cancel()
 
-			scada.Shutdown(ctx)
+			scadaApi.Shutdown(ctx)
 
 			return nil
 		},

@@ -5,6 +5,7 @@ import (
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/logger"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/queue"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/util"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type Job interface {
@@ -44,7 +45,17 @@ func (j *jobInternal) Run(ctx context.Context, scada *Scadagobr, data chan messa
 		case msg := <-data:
 			j.status = queue.Running
 
-			ctx, span := util.Tracer.Start(msg.ctx, "Job.Run ")
+			ctx, span := util.Tracer.Start(msg.ctx, "Job.Run")
+			span.SetAttributes(
+				attribute.KeyValue{
+					Key:   "job.id",
+					Value: attribute.StringValue(j.id),
+				},
+				attribute.KeyValue{
+					Key:   "job.queue",
+					Value: attribute.StringValue(j.queue),
+				},
+			)
 
 			err := j.job.Execute(ctx, scada, msg.data)
 			msg.response <- err

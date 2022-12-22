@@ -20,22 +20,4 @@ func ConfigureSetupFlags(cmd *cobra.Command, opt *pkg.ScadagobrOptions) {
 	cmd.Flags().Duration("expiration", opt.Expiration, "expiration time for jwt")
 	cmd.Flags().Duration("refreshExpiration", opt.RefreshExpiration, "expiration time for refresh jwt")
 	cmd.Flags().Duration("shutdownWait", opt.ShutdownWait, "shutdown wait time")
-
-	//viper.SetDefault("address", "0.0.0.0")
-	//viper.SetDefault("port", 11139)
-	//viper.SetDefault("logfile", "")
-	//// 32Mb
-	//viper.SetDefault("maxRecvMsgSize", 1024*1024*32)
-	//viper.SetDefault("metricsServer", true)
-	//viper.SetDefault("devMode", false)
-	//viper.SetDefault("adminPassword", "admin")
-	//viper.SetDefault("refreshExpiration", 15*24*time.Hour)
-	//viper.SetDefault("expiration", 15*time.Minute)
-	//viper.SetDefault("shutdownWait", 30*time.Minute)
-	//
-	//viper.SetConfigName("scadagobr")
-	//
-	//viper.ReadInConfig()
-	//
-	//viper.AutomaticEnv()
 }

@@ -77,7 +77,7 @@ func TestScheduleJob(t *testing.T) {
 
 	time.Sleep(time.Second * 1)
 
-	period, err := manager.schedulerProvider.GetJobsPeriod(ctx, timeProvider.GetCurrentTime(), timeProvider.GetCurrentTime().Add(time.Minute*60))
+	period, err := manager.SchedulerProvider.GetJobsPeriod(ctx, timeProvider.GetCurrentTime(), timeProvider.GetCurrentTime().Add(time.Minute*60))
 	if err != nil {
 		t.Fatal(err)
 	}

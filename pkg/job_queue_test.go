@@ -12,7 +12,7 @@ import (
 func createQueueManagerTest(t *testing.T) (*QueueManager, queue.Provider) {
 	provider := queue.NewProviderInMemory(providers.DefaultTimeProvider)
 
-	return NewManager(provider, logger.NewTestLogger(t)), provider
+	return NewQueueManager(provider, logger.NewTestLogger(t)), provider
 }
 
 func TestManagerStartAndStop(t *testing.T) {

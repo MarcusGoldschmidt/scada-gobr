@@ -35,12 +35,15 @@ type Scadagobr struct {
 	PurgeManager *purge.Manager
 	HubManager   events.HubManager
 
+	QueueManager     *QueueManager
+	SchedulerManager *SchedulerManager
+
 	// Created after the server is started
 	shutdownContext func()
 }
 
 func (s *Scadagobr) Setup(ctx context.Context) error {
-	s.Logger.Infof("VERSION: %s", App)
+	s.Logger.Infof("APP: %s", App)
 	s.Logger.Infof("VERSION: %s", Version)
 	s.Logger.Infof("COMMIT: %s", Commit)
 	s.Logger.Infof("BUILT AT: %s", BuiltAt)

@@ -20,7 +20,7 @@ func (i *InMemoryProvider) GetJobsTimeAndId(ctx context.Context, jobId string, t
 	}
 
 	for _, scheduledJob := range scheduledJobs {
-		if scheduledJob.at.Equal(time) {
+		if scheduledJob.At.Equal(time) {
 			return scheduledJob, nil
 		}
 	}
@@ -49,11 +49,11 @@ func (i *InMemoryProvider) ScheduleJobTime(ctx context.Context, date time.Time, 
 	}
 
 	i.scheduledJobs[jobId] = append(i.scheduledJobs[jobId], &ScheduledJob{
-		id:         uuid.New().String(),
-		jobId:      jobId,
-		at:         date,
-		typeName:   job.TypeName,
-		executedAt: nil,
+		Id:         uuid.New().String(),
+		JobId:      jobId,
+		At:         date,
+		TypeName:   job.TypeName,
+		ExecutedAt: nil,
 	})
 
 	return nil
@@ -70,7 +70,7 @@ func (i *InMemoryProvider) GetJobsPeriod(ctx context.Context, initial, end time.
 
 	for _, scheduledJobs := range i.scheduledJobs {
 		for _, scheduledJob := range scheduledJobs {
-			if scheduledJob.at.Before(end) && scheduledJob.at.After(initial) {
+			if scheduledJob.At.Before(end) && scheduledJob.At.After(initial) {
 				jobs = append(jobs, scheduledJob)
 			}
 		}
@@ -89,7 +89,7 @@ func (i *InMemoryProvider) GetJobsPeriodById(ctx context.Context, jobId string, 
 	}
 
 	for _, scheduledJob := range scheduledJobs {
-		if scheduledJob.at.Before(end) && scheduledJob.at.After(initial) {
+		if scheduledJob.At.Before(end) && scheduledJob.At.After(initial) {
 			jobs = append(jobs, scheduledJob)
 		}
 	}

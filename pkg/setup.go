@@ -6,7 +6,9 @@ import (
 	gorm2 "github.com/MarcusGoldschmidt/scadagobr/pkg/persistence/gorm"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/providers"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/purge"
+	postgres2 "github.com/MarcusGoldschmidt/scadagobr/pkg/queue/postgres"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/runtime"
+	postgres3 "github.com/MarcusGoldschmidt/scadagobr/pkg/scheduler/postgres"
 	scadaServer "github.com/MarcusGoldschmidt/scadagobr/pkg/server"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -38,6 +40,21 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 	runtimeManager := runtime.NewRuntimeManager(loggerImp, dataPointPersistence, hubManager, timeProvider)
 	purgeManager := purge.NewManager(dataPointPersistence, dataSourcePersistence, timeProvider, loggerImp, time.Hour)
 
+	queueProvider := postgres2.NewSqlPostgresJobQueue(db, timeProvider)
+	err = queueProvider.Setup()
+	if err != nil {
+		return nil, err
+	}
+	queueManager := NewQueueManager(queueProvider, loggerImp)
+
+	schedulerProvider := postgres3.NewSchedulerPostgresProvider(db)
+	err = schedulerProvider.Setup()
+	if err != nil {
+		return nil, err
+	}
+
+	schedulerManager := NewSchedulerManager(schedulerProvider, timeProvider, loggerImp, queueManager)
+
 	scada := &Scadagobr{
 		RuntimeManager:        runtimeManager,
 		Logger:                loggerImp,
@@ -52,6 +69,8 @@ func DefaultScadagobr(opt *ScadagobrOptions) (*Scadagobr, error) {
 		PurgeManager:          purgeManager,
 		HubManager:            hubManager,
 		TimeProvider:          timeProvider,
+		SchedulerManager:      schedulerManager,
+		QueueManager:          queueManager,
 	}
 
 	return scada, nil

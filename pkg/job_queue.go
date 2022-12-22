@@ -38,16 +38,16 @@ type QueueManager struct {
 	lock          sync.Locker
 	queues        map[string]*queueAggregate
 	logger        logger.Logger
-	queueProvider queue.Provider
+	QueueProvider queue.Provider
 
 	cancel func()
 }
 
-func NewManager(jobQueue queue.Provider, logger logger.Logger) *QueueManager {
+func NewQueueManager(jobQueue queue.Provider, logger logger.Logger) *QueueManager {
 	return &QueueManager{
 		lock:          &sync.Mutex{},
 		queues:        map[string]*queueAggregate{},
-		queueProvider: jobQueue,
+		QueueProvider: jobQueue,
 		logger:        logger,
 	}
 }
@@ -69,7 +69,7 @@ func (m *QueueManager) Start(ctx context.Context) {
 			m.lock.Lock()
 
 			for queueName, _ := range m.queues {
-				msgs, err := m.queueProvider.Dequeue(ctx, queueName, 16)
+				msgs, err := m.QueueProvider.Dequeue(ctx, queueName, 16)
 				if err != nil {
 					return
 				}
@@ -88,9 +88,9 @@ func (m *QueueManager) Start(ctx context.Context) {
 						err := <-msg.response
 						if err != nil {
 							m.logger.Errorf("Queue %s MessageId %s failed: %s", queue, msg.id, err)
-							m.queueProvider.Nack(ctx, queueName, msg.id, err)
+							m.QueueProvider.Nack(ctx, queueName, msg.id, err)
 						} else {
-							m.queueProvider.Ack(ctx, queueName, msg.id)
+							m.QueueProvider.Ack(ctx, queueName, msg.id)
 						}
 					}(queueName, internalMsg)
 				}

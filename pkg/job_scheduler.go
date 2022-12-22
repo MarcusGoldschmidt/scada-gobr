@@ -23,7 +23,7 @@ var (
 )
 
 type SchedulerManager struct {
-	schedulerProvider scheduler.Provider
+	SchedulerProvider scheduler.Provider
 
 	lock         sync.Locker
 	cancel       func()
@@ -36,7 +36,7 @@ type SchedulerManager struct {
 
 func NewSchedulerManager(provider scheduler.Provider, timeProvider providers.TimeProvider, logger logger.Logger, queueManager *QueueManager) *SchedulerManager {
 	return &SchedulerManager{
-		schedulerProvider: provider,
+		SchedulerProvider: provider,
 		timeProvider:      timeProvider,
 		logger:            logger,
 		queueManager:      queueManager,
@@ -53,7 +53,7 @@ func (m *SchedulerManager) AddOrUpdateJob(ctx context.Context, cron string, jobI
 		return err
 	}
 
-	jobDatabase, err := m.schedulerProvider.GetJobById(ctx, jobId)
+	jobDatabase, err := m.SchedulerProvider.GetJobById(ctx, jobId)
 
 	if err != nil {
 		return err
@@ -75,13 +75,13 @@ func (m *SchedulerManager) AddOrUpdateJob(ctx context.Context, cron string, jobI
 		return nil
 	}
 
-	err = m.schedulerProvider.AddOrUpdateJob(ctx, entity)
+	err = m.SchedulerProvider.AddOrUpdateJob(ctx, entity)
 	if err != nil {
 		return err
 	}
 
 	if jobDatabase != nil && jobDatabase.Cron != cron {
-		err := m.schedulerProvider.RemoveScheduledJobs(ctx, jobId)
+		err := m.SchedulerProvider.RemoveScheduledJobs(ctx, jobId)
 		if err != nil {
 			return err
 		}
@@ -92,7 +92,7 @@ func (m *SchedulerManager) AddOrUpdateJob(ctx context.Context, cron string, jobI
 		times := cronParse.NextN(m.timeProvider.GetCurrentTime(), 30)
 
 		for _, t := range times {
-			err := m.schedulerProvider.ScheduleJobTime(ctx, t, jobId)
+			err := m.SchedulerProvider.ScheduleJobTime(ctx, t, jobId)
 			if err != nil {
 				return err
 			}
@@ -105,7 +105,7 @@ func (m *SchedulerManager) AddOrUpdateJob(ctx context.Context, cron string, jobI
 }
 
 func (m *SchedulerManager) TriggerJob(ctx context.Context, jobId string) error {
-	job, err := m.schedulerProvider.GetJobById(ctx, jobId)
+	job, err := m.SchedulerProvider.GetJobById(ctx, jobId)
 	if err != nil {
 		return err
 	}
@@ -126,12 +126,12 @@ func createCallBackSchedule(entity *scheduler.JobEntity) Job {
 
 func (m *SchedulerManager) RemoveJob(ctx context.Context, jobId string) error {
 
-	err := m.schedulerProvider.RemoveScheduledJobs(ctx, jobId)
+	err := m.SchedulerProvider.RemoveScheduledJobs(ctx, jobId)
 	if err != nil {
 		return err
 	}
 
-	err = m.schedulerProvider.RemoveJob(ctx, jobId)
+	err = m.SchedulerProvider.RemoveJob(ctx, jobId)
 	if err != nil {
 		return err
 	}
@@ -142,7 +142,7 @@ func (m *SchedulerManager) RemoveJob(ctx context.Context, jobId string) error {
 func (m *SchedulerManager) GetNextJobs(ctx context.Context, jobId string, duration time.Duration) ([]*scheduler.ScheduledJob, error) {
 	now := m.timeProvider.GetCurrentTime()
 
-	nextJobs, err := m.schedulerProvider.GetJobsPeriodById(ctx, jobId, now, now.Add(duration))
+	nextJobs, err := m.SchedulerProvider.GetJobsPeriodById(ctx, jobId, now, now.Add(duration))
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (m *SchedulerManager) GetNextJobs(ctx context.Context, jobId string, durati
 }
 
 func (m *SchedulerManager) queueProvider() queue.Provider {
-	return m.queueManager.queueProvider
+	return m.queueManager.QueueProvider
 }
 
 func (m *SchedulerManager) Stop() error {
@@ -161,7 +161,7 @@ func (m *SchedulerManager) Stop() error {
 }
 
 func (m *SchedulerManager) ScheduleNextExecution(ctx context.Context, jobId string) error {
-	entity, err := m.schedulerProvider.GetJobById(ctx, jobId)
+	entity, err := m.SchedulerProvider.GetJobById(ctx, jobId)
 
 	if err != nil {
 		return err
@@ -183,7 +183,7 @@ func (m *SchedulerManager) ScheduleNextExecution(ctx context.Context, jobId stri
 		return errors.New("no cron or next execution time found for job: " + entity.JobId)
 	}
 
-	jobExist, err := m.schedulerProvider.GetJobsTimeAndId(ctx, entity.JobId, nextTime)
+	jobExist, err := m.SchedulerProvider.GetJobsTimeAndId(ctx, entity.JobId, nextTime)
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func (m *SchedulerManager) ScheduleNextExecution(ctx context.Context, jobId stri
 		return ErrJobAlreadyScheduled
 	}
 
-	return m.schedulerProvider.ScheduleJobTime(ctx, nextTime, entity.JobId)
+	return m.SchedulerProvider.ScheduleJobTime(ctx, nextTime, entity.JobId)
 }
 
 func (m *SchedulerManager) Start(ctx context.Context, verificationTimes ...time.Duration) {
@@ -217,7 +217,7 @@ func (m *SchedulerManager) Start(ctx context.Context, verificationTimes ...time.
 
 			startTime := m.timeProvider.GetCurrentTime().Add(-verificationTime)
 
-			jobs, err := m.schedulerProvider.GetJobsPeriod(ctx, startTime, startTime.Add(verificationTime*2))
+			jobs, err := m.SchedulerProvider.GetJobsPeriod(ctx, startTime, startTime.Add(verificationTime*2))
 			if err != nil {
 				m.logger.Errorf("Failed to get next jobs: %s", err)
 				m.lock.Unlock()
@@ -233,14 +233,14 @@ func (m *SchedulerManager) Start(ctx context.Context, verificationTimes ...time.
 					now := m.timeProvider.GetCurrentTime()
 
 					// Sleep until the job should be executed
-					time.Sleep(job.At().Sub(now))
+					time.Sleep(job.At.Sub(now))
 
-					err := m.queueProvider().Enqueue(ctx, "scheduler:"+job.TypeName(), struct{}{})
+					err := m.queueProvider().Enqueue(ctx, "scheduler:"+job.TypeName, struct{}{})
 					if err != nil {
 						m.logger.Errorf("Failed to enqueue job: %s", err)
 					}
 
-					err = m.ScheduleNextExecution(ctx, job.JobId())
+					err = m.ScheduleNextExecution(ctx, job.JobId)
 					if err != nil && err != ErrJobAlreadyScheduled {
 						m.logger.Errorf("Failed to schedule next execution: %s", err)
 					}

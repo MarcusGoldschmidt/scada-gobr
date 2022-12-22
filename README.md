@@ -43,6 +43,7 @@ This stage do not support multiple instances of the application, needs distribut
     * [ ] No Auth permission
 * [ ] Custom web client changes, like images and text
 * [ ] Control runtime manager in the web
+* [ ] Integrated MQTT server
 * [ ] Export data
     * [ ] Export to CSV
     * [ ] Export to JSON

@@ -7,7 +7,7 @@ import (
 
 type JobModel struct {
 	Id            string          `gorm:"column:id;primary_key"`
-	JobId         string          `gorm:"column:job_id"`
+	JobId         string          `gorm:"column:job_id; index:idx_job_id"`
 	TypeName      string          `gorm:"column:type_name"`
 	Cron          string          `gorm:"column:cron"`
 	NextExecution *time.Time      `gorm:"column:next_execution"`
@@ -36,9 +36,9 @@ func (j *JobModel) ToEntity() *scheduler.JobEntity {
 
 type ScheduledJob struct {
 	Id         string     `gorm:"column:id;primary_key"`
-	JobId      string     `gorm:"column:job_id"`
+	JobId      string     `gorm:"column:job_id; index:idx_job_id"`
 	TypeName   string     `gorm:"column:type_name"`
-	At         time.Time  `gorm:"column:at"`
+	At         time.Time  `gorm:"column:at; index:idx_at, sort:asc"`
 	ExecutedAt *time.Time `gorm:"column:executed_at"`
 }
 

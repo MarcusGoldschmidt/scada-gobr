@@ -11,6 +11,10 @@ func NewCommonId() CommonId {
 	return uuid.New()
 }
 
+func ParseCommonId(id string) (CommonId, error) {
+	return uuid.Parse(id)
+}
+
 type Series struct {
 	Value     float64   `json:"value"`
 	Timestamp time.Time `json:"timestamp"`

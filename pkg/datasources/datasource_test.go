@@ -15,9 +15,7 @@ func TestSimpleDataSourceRuntimeManagerCommon(t *testing.T) {
 	ctx := context.Background()
 	log := logger.NewTestLogger(t)
 
-	datasource := NewDataSourceRuntimeManagerCommon(shared.CommonId(uuid.New()), "teste", log)
-
-	datasource.WithWorker(DataSourceWorkerFunc(func(ctx context.Context, errorChan chan<- error) {
+	worker := DataSourceWorkerFunc(func(ctx context.Context, errorChan chan<- error) {
 		for {
 			select {
 			case <-ctx.Done():
@@ -26,7 +24,9 @@ func TestSimpleDataSourceRuntimeManagerCommon(t *testing.T) {
 
 			}
 		}
-	}))
+	})
+
+	datasource := NewDataSourceRuntimeManagerCommon(shared.CommonId(uuid.New()), "teste", worker, log)
 
 	err := datasource.Run(ctx)
 	if err != nil {
@@ -38,8 +38,7 @@ func TestSimpleDataSourceRuntimeError(t *testing.T) {
 	ctx := context.Background()
 	log := logger.NewTestLogger(t)
 
-	datasource := NewDataSourceRuntimeManagerCommon(shared.CommonId(uuid.New()), "teste", log)
-	datasource.WithWorker(DataSourceWorkerFunc(func(ctx context.Context, errorChan chan<- error) {
+	worker := DataSourceWorkerFunc(func(ctx context.Context, errorChan chan<- error) {
 		for {
 			select {
 			case <-ctx.Done():
@@ -48,7 +47,9 @@ func TestSimpleDataSourceRuntimeError(t *testing.T) {
 				errorChan <- errors.New("error test")
 			}
 		}
-	}))
+	})
+
+	datasource := NewDataSourceRuntimeManagerCommon(shared.CommonId(uuid.New()), "teste", worker, log)
 
 	err := datasource.Run(ctx)
 	if err != nil {

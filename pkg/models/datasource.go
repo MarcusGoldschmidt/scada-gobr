@@ -17,7 +17,7 @@ type DataSource struct {
 	TypeData    map[string]any  `json:"data" gorm:"-"`
 }
 
-func (ds *DataSource) FilterAvailableDataPoints() {
+func (ds *DataSource) FilterAvailableDataPoints() []*DataPoint {
 	filteredDataPoints := make([]*DataPoint, 0)
 
 	for _, point := range ds.DataPoints {
@@ -26,5 +26,9 @@ func (ds *DataSource) FilterAvailableDataPoints() {
 		}
 	}
 
-	ds.DataPoints = filteredDataPoints
+	return filteredDataPoints
+}
+
+func ParseDataSourceTypeData[T any](ds *DataSource) (*T, error) {
+	return shared.FromJson[T](ds.Data)
 }

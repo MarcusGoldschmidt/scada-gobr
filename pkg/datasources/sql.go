@@ -35,7 +35,7 @@ type SqlWorker struct {
 	Query            string
 	ConnectionString string
 
-	dataSourceId shared.CommonId
+	DataSourceId shared.CommonId
 
 	Persistence persistence.DataPointPersistence
 }
@@ -46,11 +46,7 @@ func (c *SqlWorker) Work(ctx context.Context, errorChan chan<- error) {
 }
 
 func NewSqlWorker(period time.Duration, dataPoints []*SqlDataPoint, driver string, query string, connectionString string, dataSourceId shared.CommonId, persistence persistence.DataPointPersistence) *SqlWorker {
-	return &SqlWorker{Period: period, DataPoints: dataPoints, Driver: driver, Query: query, ConnectionString: connectionString, dataSourceId: dataSourceId, Persistence: persistence}
-}
-
-func (c *SqlWorker) DataSourceId() shared.CommonId {
-	return c.dataSourceId
+	return &SqlWorker{Period: period, DataPoints: dataPoints, Driver: driver, Query: query, ConnectionString: connectionString, DataSourceId: dataSourceId, Persistence: persistence}
 }
 
 func (c *SqlWorker) Run(ctx context.Context, errorChan chan<- error) {

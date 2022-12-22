@@ -28,3 +28,7 @@ type DataPoint struct {
 	CreatedAt    time.Time            `json:"createdAt"`
 	UpdatedAt    time.Time            `json:"updatedAt"`
 }
+
+func ParseDataPointTypeData[T any](dp DataPoint) (*T, error) {
+	return shared.FromJson[T](dp.Data)
+}

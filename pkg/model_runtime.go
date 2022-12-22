@@ -4,78 +4,27 @@ import (
 	"errors"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/datasources"
 	"github.com/MarcusGoldschmidt/scadagobr/pkg/models"
-	"github.com/MarcusGoldschmidt/scadagobr/pkg/shared"
 	"net/http"
 )
 
-func DataPointToRuntimeFunc[T any](dp *models.DataPoint, cb func(*datasources.DataPointCommon, *models.DataPoint) (*T, error)) (*T, error) {
-	common := datasources.NewDataPointCommon(dp.Id, dp.Name, dp.IsEnable)
+func parseDataPoints[T any](dataPoints []*models.DataPoint, transform func(dp *models.DataPoint) (*T, error)) ([]*T, error) {
+	result := make([]*T, 0)
 
-	return cb(common, dp)
-}
-
-func DataPointToRuntimeSql(dp *models.DataPoint) (*datasources.SqlDataPoint, error) {
-	fun := func(common *datasources.DataPointCommon, data *models.DataPoint) (*datasources.SqlDataPoint, error) {
-		dsTypeData, err := shared.FromJson[models.DataPointTypeSql](dp.Data)
-
+	for _, point := range dataPoints {
+		newPoint, err := transform(point)
 		if err != nil {
 			return nil, err
 		}
-
-		return datasources.NewSqlDataPoint(common, dsTypeData.RowIdentifier), nil
+		result = append(result, newPoint)
 	}
 
-	return DataPointToRuntimeFunc[datasources.SqlDataPoint](dp, fun)
-}
-
-func DataPointToRuntimeRandom(dp *models.DataPoint) (*datasources.RandomValueDataPoint, error) {
-	fun := func(common *datasources.DataPointCommon, data *models.DataPoint) (*datasources.RandomValueDataPoint, error) {
-		dsTypeData, err := shared.FromJson[models.DataPointTypeRandomValue](dp.Data)
-
-		if err != nil {
-			return nil, err
-		}
-
-		return datasources.NewRandomValueDataPoint(common, dsTypeData.InitialValue, dsTypeData.EndValue), err
-	}
-
-	return DataPointToRuntimeFunc[datasources.RandomValueDataPoint](dp, fun)
-}
-
-func DataPointToRuntimeHttpRequest(dp *models.DataPoint) (*datasources.HttpRequestDataPoint, error) {
-
-	fun := func(common *datasources.DataPointCommon, data *models.DataPoint) (*datasources.HttpRequestDataPoint, error) {
-		dsTypeData, err := shared.FromJson[models.DataPointTypeHttpRequest](dp.Data)
-
-		if err != nil {
-			return nil, err
-		}
-
-		return datasources.NewHttpRequestDataPoint(common, dsTypeData.RowIdentifier, dsTypeData.DateFormat), err
-	}
-
-	return DataPointToRuntimeFunc[datasources.HttpRequestDataPoint](dp, fun)
-}
-
-func DataPointToRuntimeHttpServer(dp *models.DataPoint) (*datasources.HttpServerDataPoint, error) {
-	fun := func(common *datasources.DataPointCommon, data *models.DataPoint) (*datasources.HttpServerDataPoint, error) {
-		dsTypeData, err := shared.FromJson[models.DataPointTypeHttpServer](dp.Data)
-
-		if err != nil {
-			return nil, err
-		}
-
-		return datasources.NewHttpServerDataPoint(common, dsTypeData.RowIdentifier, dsTypeData.DateFormat), err
-	}
-
-	return DataPointToRuntimeFunc[datasources.HttpServerDataPoint](dp, fun)
+	return result, nil
 }
 
 func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (datasources.DataSourceRuntimeManager, error) {
 	logger := scada.RuntimeManager.CreateLogger(ds.Id, ds.Name)
-	runtimeManager := datasources.NewDataSourceRuntimeManagerCommon(ds.Id, ds.Name, logger)
 
-	ds.FilterAvailableDataPoints()
+	availableDataPoints := ds.FilterAvailableDataPoints()
 
 	var worker datasources.DataSourceWorker
 
@@ -83,19 +32,15 @@ func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (dataso
 	// Should I use gob?
 	switch ds.Type {
 	case models.Sql:
-		dsTypeData, err := shared.FromJson[models.DataSourceTypeSql](ds.Data)
+		dsTypeData, err := models.ParseDataSourceTypeData[models.DataSourceTypeSql](ds)
 
 		if err != nil {
 			return nil, err
 		}
 
-		dataPoints := make([]*datasources.SqlDataPoint, 0)
-		for _, point := range ds.DataPoints {
-			sql, err := DataPointToRuntimeSql(point)
-			if err != nil {
-				return nil, err
-			}
-			dataPoints = append(dataPoints, sql)
+		dataPoints, err := parseDataPoints[datasources.SqlDataPoint](availableDataPoints, datasources.ModelDataPointToSql)
+		if err != nil {
+			return nil, err
 		}
 
 		worker = datasources.NewSqlWorker(
@@ -109,35 +54,27 @@ func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (dataso
 		)
 		break
 	case models.RandomValue:
-		dsTypeData, err := shared.FromJson[models.DataSourceTypeRandomValue](ds.Data)
+		dsTypeData, err := models.ParseDataSourceTypeData[models.DataSourceTypeRandomValue](ds)
 		if err != nil {
 			return nil, err
 		}
 
-		dataPoints := make([]*datasources.RandomValueDataPoint, 0)
-		for _, point := range ds.DataPoints {
-			random, err := DataPointToRuntimeRandom(point)
-			if err != nil {
-				return nil, err
-			}
-			dataPoints = append(dataPoints, random)
+		dataPoints, err := parseDataPoints[datasources.RandomValueDataPoint](availableDataPoints, datasources.ModelDataPointToRandom)
+		if err != nil {
+			return nil, err
 		}
 
 		worker = datasources.NewRandomValueWorker(ds.Id, dsTypeData.Period, dataPoints, scada.DataPointPersistence)
 		break
 	case models.HttpRequest:
-		dsTypeData, err := shared.FromJson[models.DataSourceTypeHttpRequest](ds.Data)
+		dsTypeData, err := models.ParseDataSourceTypeData[models.DataSourceTypeHttpRequest](ds)
 		if err != nil {
 			return nil, err
 		}
 
-		dataPoints := make([]*datasources.HttpRequestDataPoint, 0)
-		for _, point := range ds.DataPoints {
-			httpRequestDp, err := DataPointToRuntimeHttpRequest(point)
-			if err != nil {
-				return nil, err
-			}
-			dataPoints = append(dataPoints, httpRequestDp)
+		dataPoints, err := parseDataPoints[datasources.HttpRequestDataPoint](availableDataPoints, datasources.ModelDataPointToHttpRequest)
+		if err != nil {
+			return nil, err
 		}
 
 		response := datasources.HttpRequestWorker{
@@ -157,18 +94,14 @@ func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (dataso
 		worker = &response
 		break
 	case models.HttpServer:
-		dsTypeData, err := shared.FromJson[models.DataSourceTypeHttpServer](ds.Data)
+		dsTypeData, err := models.ParseDataSourceTypeData[models.DataSourceTypeHttpServer](ds)
 		if err != nil {
 			return nil, err
 		}
 
-		dataPoints := make([]*datasources.HttpServerDataPoint, len(ds.DataPoints))
-		for i, point := range ds.DataPoints {
-			httpRequestDp, err := DataPointToRuntimeHttpServer(point)
-			if err != nil {
-				return nil, err
-			}
-			dataPoints[i] = httpRequestDp
+		dataPoints, err := parseDataPoints[datasources.HttpServerDataPoint](availableDataPoints, datasources.ModelDataPointToHttpServer)
+		if err != nil {
+			return nil, err
 		}
 
 		response := datasources.HttpServerWorker{
@@ -179,17 +112,19 @@ func DataSourceToRuntimeManager(scada *Scadagobr, ds *models.DataSource) (dataso
 			Router:       scada.InternalRouter,
 			AtmDone:      0,
 			Endpoint:     dsTypeData.Endpoint,
+			DataSourceId: ds.Id,
 		}
-		response.SetDataSourceId(ds.Id)
 
 		worker = &response
+	default:
+		return nil, errors.New("unknown data source type: " + string(ds.Type))
 	}
 
 	if worker == nil {
 		return nil, errors.New("worker not found")
 	}
 
-	runtimeManager.WithWorker(worker)
+	runtimeManager := datasources.NewDataSourceRuntimeManagerCommon(ds.Id, ds.Name, worker, logger)
 
 	return runtimeManager, nil
 }

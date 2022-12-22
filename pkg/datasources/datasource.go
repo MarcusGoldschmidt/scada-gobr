@@ -69,7 +69,6 @@ type DataSourceRuntimeManager interface {
 
 	GetError() error
 
-	WithWorker(worker DataSourceWorker)
 	WithNotificationEachStatus(notify func(context.Context, DataSourceRuntimeManager))
 }
 
@@ -138,7 +137,7 @@ func (c *DataSourceRuntimeManagerCommon) Restart(ctx context.Context) error {
 	return nil
 }
 
-func NewDataSourceRuntimeManagerCommon(id shared.CommonId, name string, logger logger.Logger) *DataSourceRuntimeManagerCommon {
+func NewDataSourceRuntimeManagerCommon(id shared.CommonId, name string, worker DataSourceWorker, logger logger.Logger) *DataSourceRuntimeManagerCommon {
 	return &DataSourceRuntimeManagerCommon{
 		id:        id,
 		name:      name,
@@ -146,11 +145,8 @@ func NewDataSourceRuntimeManagerCommon(id shared.CommonId, name string, logger l
 		status:    Initial,
 		mutex:     sync.Mutex{},
 		logger:    logger,
+		worker:    worker,
 	}
-}
-
-func (c *DataSourceRuntimeManagerCommon) WithWorker(worker DataSourceWorker) {
-	c.worker = worker
 }
 
 func (c *DataSourceRuntimeManagerCommon) Run(ctx context.Context) error {

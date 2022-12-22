@@ -44,19 +44,7 @@ type HttpServerWorker struct {
 	Persistence persistence.DataPointPersistence
 	AtmDone     int32
 
-	dataSourceId shared.CommonId
-}
-
-func (c *HttpServerWorker) SetDataSourceId(dataSourceId shared.CommonId) {
-	c.dataSourceId = dataSourceId
-}
-
-func (c *HttpServerWorker) WithDataSourceId(dataSourceId shared.CommonId) {
-	c.dataSourceId = dataSourceId
-}
-
-func (c *HttpServerWorker) DataSourceId() shared.CommonId {
-	return c.dataSourceId
+	DataSourceId shared.CommonId
 }
 
 type request struct {
